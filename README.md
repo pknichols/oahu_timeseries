@@ -5,8 +5,10 @@ Nichols PK & Marko PB (_in prep._). Spatial complexity, not temporal noise, stru
 
 This repository contains raw environmental DNA (eDNA) metadata and metabarcoding sequence data. The dataset includes:
 
-* FAIRe-compatible sample and PCR metadata (sample_metadata.xlsx)
-* Illumina MiSeq raw sequence data (.fastq.gz)
+* FAIRe-compatible sample/PCR metadata, raw, and processed OTU tables (sample_metadata.xlsx)
+* R scripts for main analyses
+
+Raw metabarcoding sequences have been submitted to NCBI SRA (BioProject PRJNA1399417). https://dataview.ncbi.nlm.nih.gov/object/PRJNA1399417?reviewer=u0i7n07faajchu46geulelke46
 
 
 ## Citation
