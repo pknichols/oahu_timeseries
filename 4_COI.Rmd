@@ -1,0 +1,1453 @@
+---
+title: "COI eDNA Data Analysis"
+author: "Nichols, PK"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    theme: united
+---
+
+# 1. Setup
+
+## A. Load Packages
+
+```{r setup, echo=TRUE, message=FALSE, warning=FALSE, results='hold'}
+# install lulu if not installed
+#devtools::install_github("tobiasgf/lulu")
+
+# install biostrings
+#if (!require("BiocManager", quietly = TRUE)) 
+#install.packages("BiocManager")
+#BiocManager::install("Biostrings")
+
+## ---- libraries ----
+library(tidyverse)
+library(vegan)
+library(iNEXT)
+library(ggpubr)
+library(codyn)
+library(synchrony)
+library(randomForest)
+library(caret)
+library(scales)
+library(forcats)
+library(zetadiv)
+library(purrr)
+library(tidyr)
+library(insect)
+library(microDecon)
+library(lulu)
+library(Biostrings)
+library(dplyr)
+library(stringr)
+library(parallel)
+library(ape)
+# Detect available cores
+available_cores = detectCores(logical = FALSE)  # physical cores
+cores_to_use = max(1, available_cores - 1)
+
+set.seed(123)
+numperm=9999 # Permutation tests
+numsam=250 # TITAN2 bootstrap samples
+
+## ---- paths ----
+paths=list(
+  data_raw      ="data/raw",
+  data_processed="data/processed",
+  results_rds   ="results/rds",
+  results_tables="results/tables",
+  results_figs  ="results/figures"
+)
+
+walk(paths, dir.create, showWarnings=FALSE, recursive=TRUE)
+
+## ---- plotting theme ----
+theme_set(
+  theme_bw(base_size=12) +
+    theme(
+      panel.grid=element_blank(),
+      strip.background=element_blank(),
+      axis.text.x=element_text(angle=45, hjust=1)
+    )
+)
+
+## ---- helper functions ----
+st_err=function(x) sd(x, na.rm=TRUE) / sqrt(sum(!is.na(x)))
+
+# Metadata
+metadata=read.csv(
+  file.path(paths$data_raw, "metadata_SST.csv")
+)
+
+# Make SAMPLE_ID a string with leading zeros (3 digits)
+metadata$SAMPLE_ID = sprintf("%03d", as.numeric(metadata$SAMPLE_ID))
+```
+
+#2. OTU Table Processing
+
+## A. Load Decontaminated Data
+
+```{r}
+# ----  Data Loading ----
+otu_decontam=read_csv(
+  file.path(
+    paths$data_processed,
+    "OTU_table_taxonomy_decontaminated_unfiltered_COI.csv"
+  )
+)
+
+# Keep only taxonomically meaningful ranks
+otu_unfiltered=otu_decontam %>%
+  filter(!rank %in% c("no rank", "kingdom", "superkingdom"))
+```
+
+## C.  Filter Data
+
+```{r}
+# ----  Data Cleaning ----
+exclude_phylum=c(
+  "Fungi",
+  "Apicomplexa",
+  "Streptophyta",
+  "Bacillariophyta",
+  "Euglenida"
+)
+
+exclude_class=c(
+  "Mamiellophyceae",
+  "Trebouxiophyceae",
+  "Acantharea",
+  "Chrysophyceae",
+  "Cryptophyta",
+  "Chlorodendrophyceae",
+  "Collembola",
+  "Dictyochophyceae",
+  "Dinophyceae",
+  "Haptophyceae",
+  "Heterotrichea",
+  "Insecta",
+  "Aves",
+  "Labyrinthulomycetes",
+  "Litostomatea",
+  "Nephroselmidophyceae",
+  "Oligohymenophorea",
+  "Oomycetes",
+  "Pelagophyceae",
+  "Phyllopharyngea",
+  "Polycystinea",
+  "Prostomatea",
+  "Raphidophyceae",
+  "Spirotrichea"
+)
+
+exclude_order=c(
+  "Pyramimonadales",
+  "Bicosoecida",
+  "Choanoflagellida",
+  "Isochrysidales",
+  "Pavlovales",
+  "Perkinsida",
+  "Phaeocystales",
+  "Prymnesiales",
+  "Himatismenida",
+  "Kinetoplastida",
+  "Chlamydomonadales"
+)
+
+exclude_family=c("Paramoebidae")
+
+otu_clean=otu_unfiltered %>%
+  filter(
+    !phylum %in% exclude_phylum,
+    !class  %in% exclude_class,
+    !order  %in% exclude_order,
+    !family %in% exclude_family,
+    !(phylum == "Chlorophyta" & (is.na(class) | class == ""))
+  )
+
+# Remove zero sum rows/cols
+otu_cols=2:(ncol(otu_clean) - 10)
+
+# Remove zero-sum OTU columns
+keep_cols=colSums(otu_clean[, otu_cols]) != 0
+
+# Remove zero-sum rows
+otu_clean=otu_clean[rowSums(otu_clean[, otu_cols]) != 0, ]
+otu_clean$score=NULL
+
+
+otu_clean=cbind(
+  otu_clean[, -otu_cols],            # keep metadata
+  otu_clean[, otu_cols][, keep_cols] # keep nonzero OTUs
+)
+
+# Build taxa table
+taxa=otu_clean[, 1:10]
+
+# Matrix table
+read_cols=otu_clean[, 11:ncol(otu_clean)]
+```
+
+## D. OTU matrix creation
+
+```{r}
+## ---- OTU × sample matrix ----
+otu_table=otu_clean[, 11:ncol(otu_clean)]
+
+# Ensure numeric
+otu_table=as.matrix(
+  apply(otu_table, 2, as.numeric)
+)
+
+# MOTUs as rows
+rownames(otu_table)=otu_clean$OTU_ID
+colnames(otu_table) = sprintf("%03d", as.numeric(colnames(otu_table))) # pad sampleID
+
+## ---- sample metadata aligned ----
+sample_metadata=metadata %>%
+  filter(SAMPLE_ID %in% colnames(otu_table)) %>%
+  arrange(match(SAMPLE_ID, colnames(otu_table)))
+sample_metadata=sample_metadata %>%
+  mutate(SAMPLE_ID=as.character(SAMPLE_ID))
+stopifnot(all(sample_metadata$SAMPLE_ID == colnames(otu_table)))
+
+## ---- site-wise sample lists ----
+site_samples=split(sample_metadata$SAMPLE, sample_metadata$SITE)
+```
+
+## E. Normalizing reads
+
+```{r}
+# ---- Normalizing Reads ----
+otu_reads=otu_table
+storage.mode(otu_reads)="numeric"
+
+write_csv(
+  as.data.frame(otu_reads) %>% rownames_to_column("OTU_ID"),
+  file.path(paths$data_processed, "OTU_reads_COI.csv")
+)
+
+## ---- prepare for iNEXT (sample-wise lists) ----
+otu_list_samples=apply(
+  otu_reads,
+  2,                   # apply over samples
+  function(x) x[x > 0] # keep nonzero OTUs
+)
+
+otu_list_samples=otu_list_samples[lengths(otu_list_samples) > 0]
+
+## ---- run or load iNEXT ----
+inext_file=file.path(paths$results_rds, "iNEXT_sample_COI.rds")
+
+if (!file.exists(inext_file)) {
+  inext_out_samples=iNEXT(
+    otu_list_samples,
+    q=c(0,1,2),
+    datatype="abundance",
+    se=FALSE
+  )
+  saveRDS(inext_out_samples, inext_file)
+} else {
+  inext_out_samples=readRDS(inext_file)
+}
+
+coverage_info=inext_out_samples$DataInfo
+
+## ---- target coverage ----
+target_coverage=min(coverage_info$SC, na.rm=TRUE)
+
+## ---- coverage-based scaling ----
+rarefy_to_coverage=function(x, target_SC, SC_sample) {
+  if (SC_sample >= target_SC) {
+    scale_factor=target_SC / SC_sample
+    x_scaled=round(x * scale_factor)
+    x_scaled[x_scaled < 0]=0
+    return(x_scaled)
+  } else {
+    return(x)
+  }
+}
+
+otu_coverage=otu_reads
+
+for (s in colnames(otu_reads)) {
+  SC_sample=coverage_info$SC[coverage_info$Assemblage == s]
+  otu_coverage[, s]=rarefy_to_coverage(
+    otu_reads[, s],
+    target_coverage,
+    SC_sample
+  )
+}
+
+# Remove OTUs that dropped out
+otu_coverage=otu_coverage[rowSums(otu_coverage) > 0, ]
+
+#write_csv(as.data.frame(otu_coverage) %>% rownames_to_column("OTU_ID"), file.path(paths$data_processed, "OTU_coverage_COI.csv"))
+
+## ---- transformations ----
+
+# Hellinger
+otu_hellinger=decostand(t(otu_coverage), method="hellinger")
+otu_hellinger=t(otu_hellinger)
+
+#write_csv(as.data.frame(otu_hellinger) %>% rownames_to_column("OTU_ID"), file.path(paths$results_tables, "OTU_hellinger_COI.csv"))
+
+# Presence–absence
+otu_pa=decostand(t(otu_coverage), method="pa")
+otu_pa=t(otu_pa)
+
+# eDNA index
+relative_abundance=sweep(otu_coverage, 2, colSums(otu_coverage), "/")
+max_relative_abundance=apply(relative_abundance, 1, max, na.rm=TRUE)
+otu_index=sweep(relative_abundance, 1, max_relative_abundance, "/")
+otu_index[is.na(otu_index)]=0
+
+write_csv(as.data.frame(otu_index) %>% rownames_to_column("OTU_ID"), file.path(paths$results_tables, "OTU_eDNAindex_COI.csv"))
+```
+
+#3. Richness and Diversity
+
+```{r}
+# ---- compute Hill numbers ----
+hill_df=inext_out_samples$AsyEst %>%
+  select(Assemblage, Diversity, Estimator) %>%
+  pivot_wider(
+    names_from =Diversity,
+    values_from=Estimator
+  )
+
+# Rename columns
+colnames(hill_df)=c("SAMPLE_ID", "Hill_q0", "Hill_q1", "Hill_q2")
+
+alpha_div=hill_df %>%
+  left_join(sample_metadata, by="SAMPLE_ID")
+
+write_csv(
+  alpha_div,
+  file.path(paths$results_tables, "alpha_div_COI_iNEXT.csv")
+)
+
+p1=ggplot(alpha_div, aes(x=SITE, y=Hill_q0, fill=SITE)) +
+  geom_violin(alpha=0.5, scale="width") +
+  geom_point(position=position_jitter(width=0.2), size=0.8) +
+  geom_boxplot(width=0.1, outlier.shape=NA) +
+  labs(title="Richness (q=0)", x="", y="") +
+  theme(
+    legend.position="none",
+    axis.text.x=element_text(angle=45, hjust=1)
+  )
+
+p2=ggplot(alpha_div, aes(x=SITE, y=Hill_q1, fill=SITE)) +
+  geom_violin(alpha=0.5, scale="width") +
+  geom_point(position=position_jitter(width=0.2), size=0.8) +
+  geom_boxplot(width=0.1, outlier.shape=NA) +
+  labs(title="Shannon (q=1)", x="", y="") +
+  theme(
+    legend.position="none",
+    axis.text.x=element_text(angle=45, hjust=1)
+  )
+
+p3=ggplot(alpha_div, aes(x=SITE, y=Hill_q2, fill=SITE)) +
+  geom_violin(alpha=0.5, scale="width") +
+  geom_point(position=position_jitter(width=0.2), size=0.8) +
+  geom_boxplot(width=0.1, outlier.shape=NA) +
+  labs(title="Simpson (q=2)", x="", y="") +
+  theme(
+    legend.position="none",
+    axis.text.x=element_text(angle=45, hjust=1)
+  )
+
+alphaplot=ggarrange(p1, p2, p3, ncol=3)
+alphaplot
+```
+
+#4. Community Ordination
+
+## A. NMDS/Envfit
+
+```{r}
+# ---- Beta Diversity ----
+community_matrix=t(otu_index)
+community_matrix=community_matrix[
+  rownames(community_matrix) %in% sample_metadata$SAMPLE_ID,
+]
+
+## ---- distance matrix ----
+distance_method="bray"
+
+dist_matrix=vegdist(
+  community_matrix,
+  method=distance_method
+)
+
+## ---- NMDS ----
+#####################################################################
+#nmds=metaMDS(community_matrix, k=3, trymax=500, trace=T, weakties=TRUE, maxit=numperm, pc=TRUE, zerodist="add")
+#saveRDS(nmds, file.path(paths$results_rds, "nmds_COI.rds"))
+#####################################################################
+nmds=readRDS(file.path(paths$results_rds, "nmds_COI.rds"))
+
+## ---- extract scores ----
+nmds_scores=as.data.frame(scores(nmds, display="sites"))
+nmds_scores$SAMPLE_ID=rownames(nmds_scores)
+
+nmds_scores=nmds_scores %>%
+  left_join(sample_metadata, by="SAMPLE_ID")
+
+
+write.csv(nmds_scores, file=file.path(paths$results_tables, "NMDS_data_COI.csv"), row.names = F)
+
+# Choose which abiotic predictors to fit (scaled is fine)
+env.vars = sample_metadata[, c("WVHT", "SST", "MWD", "WSPD", "WDIR", "tide_height_m", "degrees")]
+
+# Ensure rows match community matrix
+env.vars = env.vars[match(rownames(community_matrix), sample_metadata$SAMPLE_ID), ]
+
+# Run envfit
+ef = envfit(nmds, env.vars, permutations = numperm, na.rm=T)
+
+# Extract unscaled arrow coordinates directly from the envfit object
+scores_env = as.data.frame(scores(ef, display = "vectors"))
+
+# Compute the scaling multiplier 
+mult = vegan:::ordiArrowMul(ef)
+
+# Apply scaling
+scores_env = scores_env * mult
+
+# Add labels
+scores_env$Variable = rownames(scores_env)
+scores_env$pval = ef$vectors$pvals
+scores_env=subset(scores_env, pval<0.05)
+
+
+write.csv(scores_env, file=file.path(paths$results_tables, "envfit_COI.csv"), row.names = F)
+
+
+## ---- NMDS plot ----
+nmdsplot=ggplot(
+  nmds_scores,
+  aes(NMDS1, NMDS2, color=SITE)
+) +
+  geom_point(size=1.5, alpha=0.8) +
+  coord_equal() +
+  theme_bw() +
+  labs(
+    title="COI NMDS (Bray–Curtis, eDNA index)",
+    subtitle=paste("Stress =", round(nmds$stress, 3))
+  ) + theme(legend.position = "right")
+
+
+nmdsplot_env=nmdsplot +
+  geom_segment(
+    data = scores_env,
+    aes(x = 0, xend = NMDS1, y = 0, yend = NMDS2),
+    arrow = arrow(length = unit(0.25, "cm")),
+    color = "black",
+    linewidth = 0.7,
+    inherit.aes = FALSE
+  ) +
+  geom_text(
+    data = scores_env,
+    aes(x = NMDS1 * 1.1, y = NMDS2 * 1.1, label = Variable),
+    size = 4,
+    fontface = "bold",
+    inherit.aes = FALSE
+  )
+
+nmdsplot_env
+```
+
+## B. Dispersion/Centroids/Variance (Table S4)
+
+```{r}
+## ---- BETADISP ----
+sample_metadata$SITE_STEP=interaction(sample_metadata$SITE, sample_metadata$STEP, drop=TRUE)
+
+# Check for variability across SITE groups
+site_dispersion=betadisper(dist_matrix, group=sample_metadata$SITE)
+anova(site_dispersion) ##p<0.001, df=3, F=15.4 = ANOSIM
+
+# Check for variability across STEP groups
+step_dispersion=betadisper(dist_matrix, group=sample_metadata$STEP)
+anova(step_dispersion) ##p=0.112, df=16, F=1.48 = PERMANOVA
+
+# Check for variability across SITE_STEP interaction
+sitestep_dispersion=betadisper(dist_matrix, group=sample_metadata$SITE_STEP)
+anova(sitestep_dispersion) ##p<0.0001, df=67, F=3.42 = ANOSIM
+
+## ---- PERMANOVA ----
+#adonis_site=adonis2(dist_matrix ~ SITE, data=sample_metadata, permutations=numperm)
+#adonis_site 
+
+adonis_step=adonis2(dist_matrix ~ STEP, data=sample_metadata, strata = sample_metadata$SITE, permutations=numperm)
+adonis_step 
+
+#adonis_sitestep=adonis2(dist_matrix ~ SITE_STEP, data=sample_metadata, permutations=numperm)
+#adonis_sitestep 
+
+## ---- ANOSIM ----
+anosim.site=anosim(dist_matrix, group=sample_metadata$SITE, permutations=numperm)
+anosim.site #p<0.001, R=0.61
+
+#anosim.step=anosim(dist_matrix, group=sample_metadata$STEP,  strata = sample_metadata$SITE, permutations=numperm)
+#anosim.step #p<0.001, R=0.13
+
+anosim.sitestep=anosim(dist_matrix, group=sample_metadata$SITE_STEP, permutations=numperm)
+anosim.sitestep #p<0.001, R=0.89
+
+## ---- Variance partitioning ---
+varpart.out = varpart(dist_matrix, ~ SITE, ~ STEP, data = sample_metadata)
+summary(varpart.out) #X1 site = 0.134, X2 step = 0.007 unique effects
+
+# Test unique contribution of SITE
+anova(dbrda(dist_matrix ~ SITE + Condition(STEP), data = sample_metadata), permutations=numperm) # p<0.001, df=3, F=11.47
+
+# Test unique contribution of STEP
+anova(dbrda(dist_matrix ~ STEP + Condition(SITE), data = sample_metadata), permutations=numperm) # p<0.001, df=1, F=2.55
+```
+
+## C. Random Forest (Table S5)
+
+### i. Spatial classification
+
+```{r}
+table.t=as.data.frame(community_matrix)
+table.t$SITE = as.factor(sample_metadata$SITE)
+table.t$STEP=as.factor(sample_metadata$STEP)
+table.t$SITE_STEP = as.factor(paste(table.t$SITE, table.t$STEP, sep = "_"))
+
+nmds_scores = as.data.frame(nmds$points)  # Extract NMDS coordinates
+cor(nmds_scores)  # Check for correlation between NMDS axes
+
+nmds_scores$SAMPLE_ID = rownames(nmds_scores)  # Assuming same row order
+nmds_scores=merge(nmds_scores, metadata, by="SAMPLE_ID")
+nmds_scores$SITE=as.factor(nmds_scores$SITE)
+nmds_scores$STEP=as.factor(nmds_scores$STEP)
+nmds_scores$SITE_STEP = as.factor(paste(nmds_scores$SITE, nmds_scores$STEP, sep = "_"))
+
+cv_folds = trainControl(method = "cv", number = 10)
+
+rf_nmds = caret::train(SITE ~ MDS1 + MDS2 + MDS3, data = nmds_scores, method = "rf", trControl = cv_folds, importance = TRUE)
+saveRDS(rf_nmds, file.path(paths$results_rds, "RFspatialmodel_COI.rds"))
+print(rf_nmds) # mtry = 2, accuracy = 0.995, kappa = 0.993
+```
+
+### ii. Temporal classification
+
+```{r}
+####STEP####
+nmds_scores$STEP=as.factor(nmds_scores$STEP)
+
+rf_nmds_step = caret::train(STEP ~ MDS1 + MDS2 + MDS3, data = nmds_scores, method = "rf", trControl = cv_folds, importance = TRUE)
+saveRDS(rf_nmds_step, file.path(paths$results_rds, "RFtemporalmodel_COI.rds"))
+print(rf_nmds_step) # mtry = 3, accuracy = 0.252, kappa = 0.203
+```
+
+### iii. Interaction classification
+
+```{r}
+####SITE-STEP####
+rf_nmds_int = caret::train(SITE_STEP ~ MDS1 + MDS2 + MDS3, data = nmds_scores, method = "rf", trControl = cv_folds, importance = TRUE)
+saveRDS(rf_nmds_int, file.path(paths$results_rds, "RFinteractionmodel_COI.rds"))
+print(rf_nmds_int) # mtry = 3, accuracy = 0.312, kappa = 0.295
+```
+
+#5. Community Dynamics
+
+## A. Synchrony
+
+```{r}
+# ---- Community Synchrony ----
+community_table=as.data.frame(t(community_matrix))
+
+community_table=community_table %>%
+  rownames_to_column("OTU_ID")
+
+community_df=community_table %>%
+  left_join(taxa, by="OTU_ID")
+
+#### ---- SELECT TAXONOMIC RANKING FOR ANALYSIS ---- ####################
+taxonomic.rank=community_df$order #"order" level turnover
+#taxonomic.rank=community_df$OTU_ID #MOTU level turnover
+########################################################################
+
+taxonomic.rank[is.na(taxonomic.rank)]="Unclassified"
+
+colnames(community_matrix)=taxonomic.rank
+
+prefixes=unique(sub("\\..*", "", colnames(community_matrix)))
+prefixes=prefixes[prefixes != ""]
+
+community_collapsed=t(
+  rowsum(t(community_matrix), group=colnames(community_matrix))
+) ##OTU table with combined taxonomies (no repeated columns)
+
+community_collapsed=as.data.frame(community_collapsed)
+ncom=ncol(community_collapsed)
+
+community=community_collapsed %>%
+  rownames_to_column("SAMPLE_ID")
+
+com.d.meta=merge(community, sample_metadata, by="SAMPLE_ID")
+rownames(com.d.meta)=com.d.meta$SAMPLE_ID
+com.d.meta$SAMPLE_ID=NULL
+
+## with metadata
+com.d.kaneohe=subset(com.d.meta, SITE=="Kāneʻohe")
+com.d.lanikai=subset(com.d.meta, SITE=="Lanikai")
+com.d.maunalua=subset(com.d.meta, SITE=="Maunalua")
+com.d.waimanalo=subset(com.d.meta, SITE=="Waimānalo")
+
+## table only
+com.kaneohe=com.d.kaneohe[,1:ncom]
+com.lanikai=com.d.lanikai[,1:ncom]
+com.maunalua=com.d.maunalua[,1:ncom]
+com.waimanalo=com.d.waimanalo[,1:ncom]
+
+####KANEOHE####
+########################################################################
+#sync.kaneohe=community.sync(com.kaneohe, type = 1, nrands = numperm, method = "spearman") # shuffle each column
+#saveRDS(sync.kaneohe, file.path(paths$results_rds, "sync_kaneohe_COI.rds"))
+########################################################################
+sync.kaneohe=readRDS(file.path(paths$results_rds, "sync_kaneohe_COI.rds"))
+k.sync=as.data.frame(sync.kaneohe$obs)
+colnames(k.sync)[1] = "obs"
+k.sync$pval=sync.kaneohe$pval
+k.sync$site="Kāneʻohe"
+
+####LANIKAI####
+#######################################################################
+#sync.lanikai=community.sync(com.lanikai, type = 1, nrands = numperm, method = "spearman") # shuffle each column
+#saveRDS(sync.lanikai, file.path(paths$results_rds, "sync_lanikai_COI.rds"))
+#######################################################################
+sync.lanikai=readRDS(file.path(paths$results_rds, "sync_lanikai_COI.rds"))
+l.sync=as.data.frame(sync.lanikai$obs)
+colnames(l.sync)[1] = "obs"
+l.sync$pval=sync.lanikai$pval
+l.sync$site="Lanikai"
+
+####MAUNALUA####
+#######################################################
+#sync.maunalua=community.sync(com.maunalua, type = 1, nrands = numperm, method = "spearman") # shuffle each column
+#saveRDS(sync.maunalua, file.path(paths$results_rds, "sync_maunalua_COI.rds"))
+########################################################
+sync.maunalua=readRDS(file.path(paths$results_rds, "sync_maunalua_COI.rds"))
+m.sync=as.data.frame(sync.maunalua$obs)
+colnames(m.sync)[1] = "obs"
+m.sync$pval=sync.maunalua$pval
+m.sync$site="Maunalua"
+
+####WAIMANALO####
+######################################################
+#sync.waimanalo=community.sync(com.waimanalo, type = 1, nrands = numperm, method = "spearman")
+#saveRDS(sync.waimanalo, file.path(paths$results_rds, "sync_waimanalo_COI.rds"))
+########################################################
+sync.waimanalo=readRDS(file.path(paths$results_rds, "sync_waimanalo_COI.rds"))
+w.sync=as.data.frame(sync.waimanalo$obs)
+colnames(w.sync)[1] = "obs"
+w.sync$pval=sync.waimanalo$pval
+w.sync$site="Waimānalo"
+
+synchrony.data=rbind(k.sync, l.sync, m.sync, w.sync)
+synchrony.data$Marker="COI"
+
+write.csv(synchrony.data, file=file.path(paths$results_tables, "TABLE_S9_synchrony_COI.csv"), row.names = F)
+#write.csv(synchrony.data, file=file.path(paths$results_tables, "TABLE_S9_synchrony_COI_motu"), row.names = F)
+```
+
+## B. Stability
+
+```{r}
+
+## ---- MOTU table long format (for stability and turnover) ----
+otu_long=otu_index %>% #change otu_index to otu_reads for read count summary data
+  as.data.frame(check.names=FALSE) %>%  # keep numeric column names intact
+  rownames_to_column("OTU_ID") %>%
+  pivot_longer(
+    cols=-OTU_ID,
+    names_to="SAMPLE_ID",
+    values_to="abundance",
+    values_drop_na=TRUE
+  ) %>%
+  mutate(
+    SAMPLE_ID=as.character(SAMPLE_ID)
+  ) %>%
+  filter(abundance > 0)
+
+otu_long=otu_long %>%
+  left_join(taxa, by="OTU_ID") %>%
+  left_join(sample_metadata, by="SAMPLE_ID")
+
+otu_long=otu_long %>%
+  mutate(abundance=as.numeric(abundance))
+
+metadata=metadata %>%
+  mutate(SAMPLE_ID=as.character(SAMPLE_ID))
+
+## ---- Stability ----
+otu_long$STEP=as.numeric(otu_long$STEP)
+stability = community_stability(
+  otu_long,
+  time.var = "STEP",
+  abundance.var = "abundance",
+  replicate.var = "SITE"
+)
+
+write_csv(
+  stability,
+  file.path(paths$results_tables, "TABLE_S9_stability_COI.csv")
+)
+
+write_csv(otu_long, file.path(paths$data_processed, "data_long_COI.csv"))
+```
+
+
+## C. Turnover
+
+### i. Overall
+
+```{r}
+## ---- Overall Turnover ----
+otu_long = otu_long %>%
+  mutate(taxa_ID = paste(OTU_ID, `class`, sep = "_"))
+
+library(plyr)
+dat.long=ddply(otu_long, .(taxa_ID, STEP, MONTH, YEAR), summarise, value=mean(abundance))
+dat.long$step=as.numeric(dat.long$STEP)
+
+library(xts)
+total.to =  # total turnover 
+  dat.long %>% 
+  turnover(., time.var = "step", species.var = "taxa_ID", abundance.var = "value", metric = "total")
+total.to$Measure="Total"
+names(total.to)[1] = "value"
+total.to$STEP=as.factor(total.to$step)
+
+appear.to =  # relative species appearances over time
+  dat.long %>% 
+  turnover(., time.var = "step", species.var = "taxa_ID", abundance.var = "value", metric = "appearance")
+appear.to$Measure="Appearance"
+names(appear.to)[1] = "value"
+appear.to$STEP=as.factor(appear.to$step)
+
+disappear.to =  # relative species disappearances over time
+  dat.long %>% 
+  turnover(., time.var = "step", species.var = "taxa_ID", abundance.var = "value", metric = "disappearance")
+disappear.to$Measure="Disappearance"
+names(disappear.to)[1] = "value"
+disappear.to$STEP=as.factor(disappear.to$step)
+
+turnover=rbind(total.to, appear.to, disappear.to)
+
+step.date = dat.long %>%
+  distinct(STEP, YEAR, MONTH)
+
+turnover=merge(turnover, step.date, by.x="STEP", by.y="STEP")
+turnover$MONTH_NUM = match(turnover$MONTH, month.name)
+turnover$MonthYear = sprintf("%02d/%s", turnover$MONTH_NUM, substr(turnover$YEAR, 3, 4))
+turnover$MonthYear = factor(
+  turnover$MonthYear,
+  levels = unique(turnover$MonthYear[order(as.yearmon(turnover$MonthYear, "%m/%y"))])
+)
+
+# Create blank rows for the first timestep
+blank_rows = data.frame(
+  STEP = NA,  
+  value = NA, 
+  step = NA, 
+  Measure = NA, 
+  YEAR = NA, 
+  MONTH=NA,
+  MONTH_NUM=NA,
+  MonthYear = c("09/19", "09/19", "09/19")  # The labels for the blank space
+)
+
+# Add the blank rows at the beginning
+turnover = rbind(blank_rows, turnover)
+turnover$Marker="COI"
+turnover$SITE="Overall"
+turnover$MonthYear = factor(
+  turnover$MonthYear,
+  levels = unique(turnover$MonthYear[order(as.yearmon(turnover$MonthYear, "%m/%y"))])
+)
+```
+
+### ii. By site
+
+#### a. Kaneohe
+
+```{r}
+####KANEOHE####
+data.long.kaneohe=subset(otu_long, SITE=="Kāneʻohe")
+data.long.kaneohe$taxa_ID=paste(data.long.kaneohe$OTU_ID, data.long.kaneohe$class, sep = "_")
+dat.long.kaneohe=ddply(data.long.kaneohe, .(taxa_ID, STEP, MONTH, YEAR), summarise, value=mean(abundance))
+dat.long.kaneohe$step=as.numeric(dat.long.kaneohe$STEP)
+
+total.to =  # total turnover 
+  dat.long.kaneohe %>% 
+  turnover(., time.var = "step", species.var = "taxa_ID", abundance.var = "value", metric = "total")
+total.to$Measure="Total"
+names(total.to)[1] = "value"
+total.to$STEP=as.factor(total.to$step)
+
+appear.to =  # relative species appearances over time
+  dat.long.kaneohe %>% 
+  turnover(., time.var = "step", species.var = "taxa_ID", abundance.var = "value", metric = "appearance")
+appear.to$Measure="Appearance"
+names(appear.to)[1] = "value"
+appear.to$STEP=as.factor(appear.to$step)
+
+disappear.to =  # relative species disappearances over time
+  dat.long.kaneohe %>% 
+  turnover(., time.var = "step", species.var = "taxa_ID", abundance.var = "value", metric = "disappearance")
+disappear.to$Measure="Disappearance"
+names(disappear.to)[1] = "value"
+disappear.to$STEP=as.factor(disappear.to$step)
+
+turnover.kaneohe=rbind(total.to, appear.to, disappear.to)
+
+step.date = dat.long %>%
+  distinct(STEP, YEAR, MONTH)
+turnover.kaneohe=merge(turnover.kaneohe, step.date, by.x="STEP", by.y="STEP")
+turnover.kaneohe$MONTH_NUM = match(turnover.kaneohe$MONTH, month.name)
+turnover.kaneohe$MonthYear = sprintf("%02d/%s", turnover.kaneohe$MONTH_NUM, substr(turnover.kaneohe$YEAR, 3, 4))
+turnover.kaneohe$MonthYear = factor(
+  turnover.kaneohe$MonthYear,
+  levels = unique(turnover.kaneohe$MonthYear[order(as.yearmon(turnover.kaneohe$MonthYear, "%m/%y"))])
+)
+
+# Create blank rows for the first three months ("09/19")
+blank_rows = data.frame(
+  STEP = NA,  
+  value = NA, 
+  step = NA, 
+  Measure = NA, 
+  YEAR = NA, 
+  MONTH=NA,
+  MONTH_NUM=NA,
+  MonthYear = c("09/19", "09/19", "09/19")  # The labels for the blank space
+)
+
+# Add the blank rows at the beginning
+turnover.kaneohe = rbind(blank_rows, turnover.kaneohe)
+turnover.kaneohe$Marker="COI"
+turnover.kaneohe$SITE="Kāneʻohe"
+turnover.kaneohe$MonthYear = factor(
+  turnover.kaneohe$MonthYear,
+  levels = unique(turnover.kaneohe$MonthYear[order(as.yearmon(turnover.kaneohe$MonthYear, "%m/%y"))])
+)
+```
+
+#### b. Lanikai
+
+```{r}
+####LANIKAI####
+data.long.lanikai=subset(otu_long, SITE=="Lanikai")
+data.long.lanikai$taxa_ID=paste(data.long.lanikai$OTU_ID, data.long.lanikai$class, sep = "_")
+dat.long.lanikai=ddply(data.long.lanikai, .(taxa_ID, STEP, MONTH, YEAR), summarise, value=mean(abundance))
+dat.long.lanikai$step=as.numeric(dat.long.lanikai$STEP)
+
+total.to =  # total turnover 
+  dat.long.lanikai %>% 
+  turnover(., time.var = "step", species.var = "taxa_ID", abundance.var = "value", metric = "total")
+total.to$Measure="Total"
+names(total.to)[1] = "value"
+total.to$STEP=as.factor(total.to$step)
+
+appear.to =  # relative species appearances over time
+  dat.long.lanikai %>% 
+  turnover(., time.var = "step", species.var = "taxa_ID", abundance.var = "value", metric = "appearance")
+appear.to$Measure="Appearance"
+names(appear.to)[1] = "value"
+appear.to$STEP=as.factor(appear.to$step)
+
+disappear.to =  # relative species disappearances over time
+  dat.long.lanikai %>% 
+  turnover(., time.var = "step", species.var = "taxa_ID", abundance.var = "value", metric = "disappearance")
+disappear.to$Measure="Disappearance"
+names(disappear.to)[1] = "value"
+disappear.to$STEP=as.factor(disappear.to$step)
+
+turnover.lanikai=rbind(total.to, appear.to, disappear.to)
+
+step.date = dat.long %>%
+  distinct(STEP, YEAR, MONTH)
+turnover.lanikai=merge(turnover.lanikai, step.date, by.x="STEP", by.y="STEP")
+turnover.lanikai$MONTH_NUM = match(turnover.lanikai$MONTH, month.name)
+turnover.lanikai$MonthYear = sprintf("%02d/%s", turnover.lanikai$MONTH_NUM, substr(turnover.lanikai$YEAR, 3, 4))
+turnover.lanikai$MonthYear = factor(
+  turnover.lanikai$MonthYear,
+  levels = unique(turnover.lanikai$MonthYear[order(as.yearmon(turnover.lanikai$MonthYear, "%m/%y"))])
+)
+
+# Create blank rows for the first three months ("09/19", "10/19", "11/19")
+blank_rows = data.frame(
+  STEP = NA,  
+  value = NA, 
+  step = NA, 
+  Measure = NA, 
+  YEAR = NA, 
+  MONTH=NA,
+  MONTH_NUM=NA,
+  MonthYear = c("09/19", "09/19", "09/19")  # The labels for the blank space
+)
+
+# Add the blank rows at the beginning
+turnover.lanikai = rbind(blank_rows, turnover.lanikai)
+turnover.lanikai$Marker="COI"
+turnover.lanikai$SITE="Lanikai"
+turnover.lanikai$MonthYear = factor(
+  turnover.lanikai$MonthYear,
+  levels = unique(turnover.lanikai$MonthYear[order(as.yearmon(turnover.lanikai$MonthYear, "%m/%y"))])
+)
+```
+
+#### c. Maunalua
+
+```{r}
+####MAUNALUA####
+data.long.maunalua=subset(otu_long, SITE=="Maunalua")
+data.long.maunalua$taxa_ID=paste(data.long.maunalua$OTU_ID, data.long.maunalua$class, sep = "_")
+dat.long.maunalua=ddply(data.long.maunalua, .(taxa_ID, STEP, MONTH, YEAR), summarise, value=mean(abundance))
+dat.long.maunalua$step=as.numeric(dat.long.maunalua$STEP)
+
+total.to =  # total turnover 
+  dat.long.maunalua %>% 
+  turnover(., time.var = "step", species.var = "taxa_ID", abundance.var = "value", metric = "total")
+total.to$Measure="Total"
+names(total.to)[1] = "value"
+total.to$STEP=as.factor(total.to$step)
+
+appear.to =  # relative species appearances over time
+  dat.long.maunalua %>% 
+  turnover(., time.var = "step", species.var = "taxa_ID", abundance.var = "value", metric = "appearance")
+appear.to$Measure="Appearance"
+names(appear.to)[1] = "value"
+appear.to$STEP=as.factor(appear.to$step)
+
+disappear.to =  # relative species disappearances over time
+  dat.long.maunalua %>% 
+  turnover(., time.var = "step", species.var = "taxa_ID", abundance.var = "value", metric = "disappearance")
+disappear.to$Measure="Disappearance"
+names(disappear.to)[1] = "value"
+disappear.to$STEP=as.factor(disappear.to$step)
+
+turnover.maunalua=rbind(total.to, appear.to, disappear.to)
+
+step.date = dat.long %>%
+  distinct(STEP, YEAR, MONTH)
+turnover.maunalua=merge(turnover.maunalua, step.date, by.x="STEP", by.y="STEP")
+turnover.maunalua$MONTH_NUM = match(turnover.maunalua$MONTH, month.name)
+turnover.maunalua$MonthYear = sprintf("%02d/%s", turnover.maunalua$MONTH_NUM, substr(turnover.maunalua$YEAR, 3, 4))
+turnover.maunalua$MonthYear = factor(
+  turnover.maunalua$MonthYear,
+  levels = unique(turnover.maunalua$MonthYear[order(as.yearmon(turnover.maunalua$MonthYear, "%m/%y"))])
+)
+
+# Create blank rows for the first three months ("09/19", "10/19", "11/19")
+blank_rows = data.frame(
+  STEP = NA,  
+  value = NA, 
+  step = NA, 
+  Measure = NA, 
+  YEAR = NA, 
+  MONTH=NA,
+  MONTH_NUM=NA,
+  MonthYear = c("09/19", "09/19", "09/19")  # The labels for the blank space
+)
+
+# Add the blank rows at the beginning
+turnover.maunalua = rbind(blank_rows, turnover.maunalua)
+turnover.maunalua$Marker="COI"
+turnover.maunalua$SITE="Maunalua"
+turnover.maunalua$MonthYear = factor(
+  turnover.maunalua$MonthYear,
+  levels = unique(turnover.maunalua$MonthYear[order(as.yearmon(turnover.maunalua$MonthYear, "%m/%y"))])
+)
+```
+
+#### d. Waimanalo
+
+```{r}
+####WAIMANALO####
+data.long.waimanalo=subset(otu_long, SITE=="Waimānalo")
+data.long.waimanalo$taxa_ID=paste(data.long.waimanalo$OTU_ID, data.long.waimanalo$class, sep = "_")
+dat.long.waimanalo=ddply(data.long.waimanalo, .(taxa_ID, STEP, MONTH, YEAR), summarise, value=mean(abundance))
+dat.long.waimanalo$step=as.numeric(dat.long.waimanalo$STEP)
+
+total.to =  # total turnover 
+  dat.long.waimanalo %>% 
+  turnover(., time.var = "step", species.var = "taxa_ID", abundance.var = "value", metric = "total")
+total.to$Measure="Total"
+names(total.to)[1] = "value"
+total.to$STEP=as.factor(total.to$step)
+
+appear.to =  # relative species appearances over time
+  dat.long.waimanalo %>% 
+  turnover(., time.var = "step", species.var = "taxa_ID", abundance.var = "value", metric = "appearance")
+appear.to$Measure="Appearance"
+names(appear.to)[1] = "value"
+appear.to$STEP=as.factor(appear.to$step)
+
+disappear.to =  # relative species disappearances over time
+  dat.long.waimanalo %>% 
+  turnover(., time.var = "step", species.var = "taxa_ID", abundance.var = "value", metric = "disappearance")
+disappear.to$Measure="Disappearance"
+names(disappear.to)[1] = "value"
+disappear.to$STEP=as.factor(disappear.to$step)
+
+turnover.waimanalo=rbind(total.to, appear.to, disappear.to)
+
+step.date = dat.long %>%
+  distinct(STEP, YEAR, MONTH)
+turnover.waimanalo=merge(turnover.waimanalo, step.date, by.x="STEP", by.y="STEP")
+turnover.waimanalo$MONTH_NUM = match(turnover.waimanalo$MONTH, month.name)
+turnover.waimanalo$MonthYear = sprintf("%02d/%s", turnover.waimanalo$MONTH_NUM, substr(turnover.waimanalo$YEAR, 3, 4))
+turnover.waimanalo$MonthYear = factor(
+  turnover.waimanalo$MonthYear,
+  levels = unique(turnover.waimanalo$MonthYear[order(as.yearmon(turnover.waimanalo$MonthYear, "%m/%y"))])
+)
+
+# Create blank rows for the first three months ("09/19", "10/19", "11/19")
+blank_rows = data.frame(
+  STEP = NA,  
+  value = NA, 
+  step = NA, 
+  Measure = NA, 
+  YEAR = NA, 
+  MONTH=NA,
+  MONTH_NUM=NA,
+  MonthYear = c("09/19", "09/19", "09/19")  # The labels for the blank space
+)
+
+# Add the blank rows at the beginning
+turnover.waimanalo = rbind(blank_rows, turnover.waimanalo)
+turnover.waimanalo$Marker="COI"
+turnover.waimanalo$SITE="Waimānalo"
+turnover.waimanalo$MonthYear = factor(
+  turnover.waimanalo$MonthYear,
+  levels = unique(turnover.waimanalo$MonthYear[order(as.yearmon(turnover.waimanalo$MonthYear, "%m/%y"))])
+)
+
+# ---- Combined ----
+turnover_site=rbind(turnover, turnover.kaneohe, turnover.lanikai, turnover.maunalua, turnover.waimanalo)
+
+# Reorder SITE so "Overall" is the first level
+turnover_site$SITE = fct_relevel(turnover_site$SITE, "Overall")
+
+write_csv(turnover_site, file.path(paths$results_tables, "turnover_COI.csv"))
+detach("package:plyr", unload = TRUE)
+```
+
+### iii. Threshold Indicators (TITAN)
+
+#### a. Prepare data
+
+```{r}
+community_matrix=t(otu_index)
+community_matrix=community_matrix[
+  rownames(community_matrix) %in% sample_metadata$SAMPLE_ID,
+]
+community_matrix=as.data.frame(community_matrix)
+community_matrix$SAMPLE_ID=rownames(community_matrix)
+
+metatable.reps=left_join(community_matrix, sample_metadata, by="SAMPLE_ID")
+metatable.reps$DATE=as.Date(metatable.reps$DATE, format = "%d/%m/%Y")
+community_matrix$SAMPLE_ID=NULL
+
+
+otu_cols = grep("^MOTU", colnames(metatable.reps), value = TRUE)
+ntax=ncol(community_matrix)
+
+# Meet assumptions of TITAN, collapse replicates, remove rare taxa
+env_time <- com.d.meta$TIME
+# Keep orders present in at least 4 samples
+keep <- colSums(community > 0) >= 4
+comm_filt <- community[, keep]
+row.names(comm_filt)=comm_filt[,1]
+comm_filt[,1]=NULL
+```
+
+####b. Run TITAN2
+
+```{r}
+library(TITAN2)
+#### TITAN #######################################################
+#titan_result <- titan(env = env_time, txa = comm_filt, minSplt = 5, numPerm = numsam, boot = TRUE, ncpus = cores_to_use)
+#saveRDS(titan_result, file.path(paths$results_rds, "titan_COI.Rdata"))
+##################################################################
+titan_result=readRDS(file.path(paths$results_rds, "titan_COI.Rdata"))
+
+## TAXA 
+titantaxa=plot_taxa_ridges(titan_result, axis.text.y = 8) # entire timeseries
+titantaxa.fall1 <- plot_taxa_ridges(titan_result, axis.text.y = 8, axis.text.x = 6, xlim = c(60, 160), xlabel = "Days")
+titantaxa.fall2 <- plot_taxa_ridges(titan_result, axis.text.y = 8,  axis.text.x = 6, xlim = c(430, 530), xlabel = "Days")
+
+titanplot=ggarrange(titantaxa.fall1, titantaxa.fall2, common.legend = T, align="hv", labels = "AUTO") # consecutive fall seasons
+
+ggsave(
+  filename = file.path(paths$results_figs, "FIGURE_S4_COI.pdf"),
+  plot     = titanplot,
+  width    = 8,
+  height   = 4,
+  units    = "in",
+  device   = cairo_pdf,
+  family   = "Arial"
+)
+```
+
+#7. Zeta Diversity
+
+## A. Core MOTUs
+
+### i. Overall
+
+```{r}
+# ---- Collapse sample timepoints ----
+metatable.z=as.data.frame(metatable.reps)
+rownames(metatable.z)=metatable.z$SAMPLE_ID
+
+metatable.z = metatable.z %>%
+  dplyr::group_by(STEP) %>%
+  dplyr::summarise(
+    dplyr::across(1:ntax, ~ sum(.x, na.rm = TRUE)),
+    dplyr::across(-(1:ntax), ~ .x[1]),
+    .groups = "drop"
+  )
+
+table.z = metatable.z %>% 
+  dplyr::select(starts_with("MOTU"))
+
+table.bin.z = table.z
+table.bin.z[] = ifelse(table.bin.z > 0, 1, 0)
+
+
+# ---- Core MOTUs ----
+# Identify core taxa that persist at the highest zeta order
+core_taxa_indices = which(colSums(table.bin.z) >= 16)
+core_motus = colnames(table.bin.z)[core_taxa_indices]
+
+core_motus = data.frame(OTU_ID = core_motus, row.names = NULL)
+
+core_motus=merge(core_motus, taxa, by="OTU_ID")
+core_motus = core_motus %>%
+  mutate(phylum = ifelse(class == "Florideophyceae", "Rhodophyta", phylum))
+core_motus = core_motus %>%
+  filter(phylum != "" & !is.na(phylum))
+
+# Count occurrences of each taxon
+taxon_counts = core_motus %>%
+  dplyr::count(phylum, sort = TRUE)
+taxon_counts$Marker="COI"
+```
+
+## B. Zeta decline
+
+### i. By marker
+
+```{r}
+xy=data.frame(TIME=metatable.z$TIME, Y=0)
+
+# Run Zeta decline models
+zeta=Zeta.decline.mc(table.bin.z, orders=1:16, NON=TRUE, DIR=TRUE, rescale=T, xy=xy, sam=numperm, plot=FALSE, silent=FALSE)
+saveRDS(zeta, file.path(paths$results_rds, "zetadecline_scaled_COI.Rdata"))
+
+# Load and plot
+zeta=readRDS(file.path(paths$results_rds, "zetadecline_scaled_COI.Rdata"))
+Plot.zeta.decline(zeta)
+zeta$aic # exp = -33.74, pl = -77.16
+
+tib.decay=zeta[1:4] %>% as.tibble() %>% mutate(Marker = "COI")
+write_csv(tib.decay, file.path(paths$results_tables, "zeta_decay_scaled_markerCOI.csv"))
+
+tib.ratio=zeta[5] %>% as.tibble() %>% mutate(zeta.order = 1:n(), Marker="COI")
+write_csv(tib.ratio, file.path(paths$results_tables, "zeta_ratio_scaled_markerCOI.csv"))
+```
+
+### ii. By site
+
+```{r}
+metatable.kaneohe=subset(metatable.reps, SITE=="Kāneʻohe")
+metatable.lanikai=subset(metatable.reps, SITE=="Lanikai")
+metatable.maunalua=subset(metatable.reps, SITE=="Maunalua")
+metatable.waimanalo=subset(metatable.reps, SITE=="Waimānalo")
+
+sites=list(
+  Kāneʻohe=metatable.kaneohe,
+  Lanikai=metatable.lanikai,
+  Maunalua=metatable.maunalua,
+  Waimānalo=metatable.waimanalo
+)
+
+table.bin.site=list()
+zeta.site=list()
+
+table.bin.site = list()
+zeta.site = list()
+
+# Loop over sites
+for (site in names(sites)) {
+  
+  # Subset the site
+  met = sites[[site]]
+  rownames(met) = met$SAMPLE_ID
+
+  # Summarize OTUs by STEP and keep first TIME value safely
+  met.sum = met %>%
+    dplyr::group_by(STEP) %>%
+    dplyr::summarise(
+      dplyr::across(all_of(otu_cols), ~ sum(.x, na.rm = TRUE)),
+      TIME = TIME[1],  # safer than first()
+      .groups = "drop"
+    )
+
+  # Isolate OTU table
+  tab = met.sum %>% dplyr::select(all_of(otu_cols))
+
+  # Convert to presence–absence
+  tab.bin = tab
+  tab.bin[] = ifelse(tab.bin > 0, 1, 0)
+
+  # Prepare xy for zeta.mc
+  xy = data.frame(
+    TIME = met.sum$TIME,
+    Y = rep(0, nrow(met.sum))
+  )
+
+  # Monte Carlo zeta decline
+  zeta.mc.site = Zeta.decline.mc(
+    tab.bin,
+    orders = 1:15,
+    NON = TRUE,
+    DIR = TRUE,
+    rescale = T,
+    xy = xy,
+    sam = numperm,
+    plot = FALSE,
+    silent = FALSE
+  )
+
+  saveRDS(
+    zeta.mc.site,
+    file.path(paths$results_rds, paste0("zetadecline_", site, "scaled_COI.Rdata"))
+  )
+
+  # Save results in lists
+  table.bin.site[[site]] = tab.bin
+  zeta.site[[site]] = zeta.mc.site
+}
+
+
+tib.zeta = imap_dfr(zeta.site, ~ {
+  # .x = zeta.mc.site for this site
+  # .y = site name
+  .x[1:4] %>%                 # select first 4 components
+    as_tibble() %>%            # convert to tibble
+    mutate(Site = .y, Marker="COI")          # add site column
+})
+write_csv(tib.zeta, file.path(paths$results_tables, "zeta_decay_scaled_COI.csv"))
+
+zeta.ratio.tib = imap_dfr(zeta.site, ~ {
+  # .x = zeta.mc.site for this site
+  # .y = site name
+  .x[5] %>%                     # select zeta ratio component
+    as_tibble() %>%              # convert to tibble
+    mutate(
+      Site = .y, Marker="COI",
+      zeta.order = 1:n()         # create order column
+    )
+})
+write_csv(zeta.ratio.tib, file.path(paths$results_tables, "zeta_ratio_scaled_COI.csv"))
+
+# Make a tibble of AIC for all sites and both models
+tib.zeta.aic = imap_dfr(zeta.site, ~ {
+  # Extract numeric AIC values
+  aic_values = .x$aic$AIC  
+  tibble(
+    Site  = .y,
+    Model = c("Exponential", "PowerLaw"),
+    AIC   = aic_values
+  )
+}) %>%
+  group_by(Site) %>%
+  mutate(
+    delta_AIC = AIC - min(AIC), Marker="COI"
+  ) %>%
+  ungroup()
+
+write_csv(tib.zeta.aic, file.path(paths$results_tables, "zeta_aic_COI.csv"))
+```
+
+####a. Core site taxa
+
+```{r}
+#### KANEOHE #####
+metatable.z.kane=metatable.kaneohe
+rownames(metatable.z.kane)=metatable.z.kane$SAMPLE_ID
+metatable.z.kane = metatable.z.kane %>%
+  dplyr::group_by(STEP) %>%
+  dplyr::summarise(
+    dplyr::across(1:ntax, ~ sum(.x, na.rm = TRUE)),
+    dplyr::across(-(1:ntax), ~ .x[1]),
+    .groups = "drop"
+  )
+
+table.z.kane = metatable.z.kane[, startsWith(colnames(metatable.z.kane), "MOTU")]
+
+table.bin.z.kane=as.data.frame(table.z.kane)
+for (i in 1:nrow(table.bin.z.kane)){
+  for (j in 1:ncol(table.bin.z.kane)){
+    if(table.bin.z.kane[i,j]>0){
+      table.bin.z.kane[i,j]=1
+    }
+  }
+}
+
+#### LANIKAI #####
+metatable.z.lani=metatable.lanikai
+rownames(metatable.z.lani)=metatable.z.lani$SAMPLE_ID
+metatable.z.lani = metatable.z.lani %>%
+  dplyr::group_by(STEP) %>%
+  dplyr::summarise(
+    dplyr::across(1:ntax, ~ sum(.x, na.rm = TRUE)),
+    dplyr::across(-(1:ntax), ~ .x[1]),
+    .groups = "drop"
+  )
+
+table.z.lani = metatable.z.lani[, startsWith(colnames(metatable.z.lani), "MOTU")]
+
+table.bin.z.lani=as.data.frame(table.z.lani)
+for (i in 1:nrow(table.bin.z.lani)){
+  for (j in 1:ncol(table.bin.z.lani)){
+    if(table.bin.z.lani[i,j]>0){
+      table.bin.z.lani[i,j]=1
+    }
+  }
+}
+
+
+#### MAUNALUA #####
+metatable.z.mauna=metatable.maunalua
+rownames(metatable.z.mauna)=metatable.z.mauna$SAMPLE_ID
+metatable.z.mauna = metatable.z.mauna %>%
+  dplyr::group_by(STEP) %>%
+  dplyr::summarise(
+    dplyr::across(1:ntax, ~ sum(.x, na.rm = TRUE)),
+    dplyr::across(-(1:ntax), ~ .x[1]),
+    .groups = "drop"
+  )
+
+table.z.mauna = metatable.z.mauna[, startsWith(colnames(metatable.z.mauna), "MOTU")]
+
+table.bin.z.mauna=as.data.frame(table.z.mauna)
+for (i in 1:nrow(table.bin.z.mauna)){
+  for (j in 1:ncol(table.bin.z.mauna)){
+    if(table.bin.z.mauna[i,j]>0){
+      table.bin.z.mauna[i,j]=1
+    }
+  }
+}
+
+
+#### WAIMANALO #####
+metatable.z.waim=metatable.waimanalo
+rownames(metatable.z.waim)=metatable.z.waim$SAMPLE_ID
+metatable.z.waim = metatable.z.waim %>%
+  dplyr::group_by(STEP) %>%
+  dplyr::summarise(
+    dplyr::across(1:ntax, ~ sum(.x, na.rm = TRUE)),
+    dplyr::across(-(1:ntax), ~ .x[1]),
+    .groups = "drop"
+  )
+
+table.z.waim = metatable.z.waim[, startsWith(colnames(metatable.z.waim), "MOTU")]
+
+table.bin.z.waim=as.data.frame(table.z.waim)
+for (i in 1:nrow(table.bin.z.waim)){
+  for (j in 1:ncol(table.bin.z.waim)){
+    if(table.bin.z.waim[i,j]>0){
+      table.bin.z.waim[i,j]=1
+    }
+  }
+}
+
+####KANEOHE ########
+core_taxa_indices_kane = which(colSums(table.bin.z.kane) >= 16)
+core_motus_kane = colnames(table.bin.z.kane)[core_taxa_indices_kane]
+
+core_motus_kane = data.frame(OTU_ID = core_motus_kane, row.names = NULL)
+
+core_motus_kane=merge(core_motus_kane, taxa, by="OTU_ID")
+core_motus_kane = core_motus_kane %>%
+  mutate(phylum = ifelse(class == "Florideophyceae", "Rhodophyta", phylum))
+core_motus_kane = core_motus_kane %>%
+  filter(phylum != "" & !is.na(phylum))
+
+# Count occurrences of each taxon
+taxon_counts_kane = core_motus_kane %>%
+  count(phylum, sort = TRUE)
+taxon_counts_kane$Site="Kāneʻohe"
+
+
+####LANIKAI ########
+core_taxa_indices_lani = which(colSums(table.bin.z.lani) >= 16)
+core_motus_lani = colnames(table.bin.z.lani)[core_taxa_indices_lani]
+
+core_motus_lani = data.frame(OTU_ID = core_motus_lani, row.names = NULL)
+
+core_motus_lani=merge(core_motus_lani, taxa, by="OTU_ID")
+core_motus_lani = core_motus_lani %>%
+  mutate(phylum = ifelse(class == "Florideophyceae", "Rhodophyta", phylum))
+core_motus_lani = core_motus_lani %>%
+  filter(phylum != "" & !is.na(phylum))
+
+# Count occurrences of each taxon
+taxon_counts_lani = core_motus_lani %>%
+  count(phylum, sort = TRUE)
+taxon_counts_lani$Site="Lanikai"
+
+
+
+####MAUNALUA ########
+core_taxa_indices_mauna = which(colSums(table.bin.z.mauna) >= 16)
+core_motus_mauna = colnames(table.bin.z.mauna)[core_taxa_indices_mauna]
+
+core_motus_mauna = data.frame(OTU_ID = core_motus_mauna, row.names = NULL)
+
+core_motus_mauna=merge(core_motus_mauna, taxa, by="OTU_ID")
+core_motus_mauna = core_motus_mauna %>%
+  mutate(phylum = ifelse(class == "Florideophyceae", "Rhodophyta", phylum))
+core_motus_mauna = core_motus_mauna %>%
+  filter(phylum != "" & !is.na(phylum))
+
+# Count occurrences of each taxon
+taxon_counts_mauna = core_motus_mauna %>%
+  count(phylum, sort = TRUE)
+taxon_counts_mauna$Site="Maunalua"
+
+
+####WAIMANALO ########
+core_taxa_indices_waim = which(colSums(table.bin.z.waim) >= 16)
+core_motus_waim = colnames(table.bin.z.waim)[core_taxa_indices_waim]
+
+core_motus_waim = data.frame(OTU_ID = core_motus_waim, row.names = NULL)
+
+core_motus_waim=merge(core_motus_waim, taxa, by="OTU_ID")
+core_motus_waim = core_motus_waim %>%
+  mutate(phylum = ifelse(class == "Florideophyceae", "Rhodophyta", phylum))
+core_motus_waim = core_motus_waim %>%
+  filter(phylum != "" & !is.na(phylum))
+
+# Count occurrences of each taxon
+taxon_counts_waim = core_motus_waim %>%
+  count(phylum, sort = TRUE)
+taxon_counts_waim$Site="Waimānalo"
+
+taxon_counts_site=rbind(taxon_counts_kane, taxon_counts_lani, taxon_counts_mauna, taxon_counts_waim)
+taxon_counts_site$Marker="COI"
+write_csv(taxon_counts_site, file.path(paths$results_tables, "coreMOTUs_site_COI.csv"))
+```
+

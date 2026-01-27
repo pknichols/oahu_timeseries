@@ -1,0 +1,200 @@
+---
+title: "1_Preprocessing"
+author: "Patrick Nichols"
+date: "2026-01-23"
+output: html_document
+---
+
+#1. Setup
+
+## A. Load Packages
+
+```{r setup, echo=TRUE, message=FALSE, warning=FALSE, results='hold'}
+# install lulu if not installed
+#devtools::install_github("tobiasgf/lulu")
+
+# install biostrings
+#if (!require("BiocManager", quietly = TRUE)) 
+#install.packages("BiocManager")
+#BiocManager::install("Biostrings")
+
+# INSECT repo https://github.com/shaunpwilkinson/insect ##download COI and COI INSECT classifier.rds
+
+## ---- libraries ----
+library(tidyverse)
+library(vegan)
+library(iNEXT)
+library(ggpubr)
+library(codyn)
+library(synchrony)
+library(randomForest)
+library(caret)
+library(scales)
+library(forcats)
+library(zetadiv)
+library(purrr)
+library(tidyr)
+library(insect)
+library(microDecon)
+library(lulu)
+library(Biostrings)
+library(dplyr)
+library(stringr)
+library(parallel)
+library(ape)
+# Detect available cores
+available_cores = detectCores(logical = FALSE)  # physical cores
+cores_to_use = max(1, available_cores - 1)
+
+set.seed(123)
+numperm=9999
+
+## ---- paths ----
+paths=list(
+  data_raw      ="data/raw",
+  data_processed="data/processed",
+  results_rds   ="results/rds",
+  results_tables="results/tables",
+  results_figs  ="results/figures"
+)
+
+walk(paths, dir.create, showWarnings=FALSE, recursive=TRUE)
+
+## ---- plotting theme ----
+theme_set(
+  theme_bw(base_size=12) +
+    theme(
+      panel.grid=element_blank(),
+      strip.background=element_blank(),
+      axis.text.x=element_text(angle=45, hjust=1)
+    )
+)
+
+## ---- helper functions ----
+st_err=function(x) sd(x, na.rm=TRUE) / sqrt(sum(!is.na(x)))
+```
+
+#2. Data Curation
+
+## A. Read VSEARCH data
+
+```{r}
+# Classifier
+classifier = readRDS(file.path(paths$data_raw, "classifier_COI.rds"))
+
+# Sequences
+data = readFASTA(file.path(paths$data_raw, "data_rep_set_COI.fasta"))
+
+# OTU table
+otutab = read.delim(file.path(paths$data_raw, "dataOTU_COI.txt"), sep = "\t", header = TRUE, row.names = 1)
+
+# Match list
+matchlist = read.delim(file.path(paths$data_raw, "match_list_COI.txt"), sep = "\t", header = FALSE)
+
+# Metadata
+metadata=read.csv(
+  file.path(paths$data_raw, "metadata_SST.csv")
+)
+# Make SAMPLE_ID a string with leading zeros (3 digits)
+metadata$SAMPLE_ID = sprintf("%03d", as.numeric(metadata$SAMPLE_ID))
+```
+
+## B. Curate with lulu
+
+```{r}
+## ---- format_data ----
+clean_centroid = function(x) sub(";.*$", "", sub("^centroid=", "", x))
+matchlist$V1 = clean_centroid(matchlist$V1)
+matchlist$V2 = clean_centroid(matchlist$V2)
+rownames(otutab) = clean_centroid(rownames(otutab))
+
+## ---- curate_lulu ----
+curated_result = lulu(otutab, matchlist)
+otutab_curated = curated_result$curated_table
+otutab_curated$OTU_ID=row.names(otutab_curated)
+colnames(otutab_curated)=gsub("X", "", names(otutab_curated)) ##remove X characters in column names
+```
+
+## C. Classify taxonomy
+
+```{r}
+## ---- classify_insect ----
+longDF = classify(
+  data, classifier, threshold = 0.85, cores = cores_to_use, tabulize = TRUE, ping = 0
+)
+
+dna_char = as.character(data)
+sequences = sapply(dna_char, paste0, collapse = "")
+longDF$sequence = sequences
+
+insect_df=tidyr::extract(longDF, representative, into="OTU_ID", regex="^centroid\\=([^;]+)")
+
+write.csv(insect_df, file.path(paths$data_processed, "insect085taxonomy_COI.csv"), row.names = FALSE)
+
+## ---- merge_otu_taxonomy ----
+insect_df = read.csv(file.path(paths$data_processed, "insect085taxonomy_COI.csv"), header = TRUE)
+insect_df$sample1=NULL
+
+# Merge with curatNULL# Merge with curated OTU table
+df.merged = merge(otutab_curated, insect_df, by = "OTU_ID")
+df.merged$taxID = NULL
+
+# Create a named vector: names = SAMPLE_ID, values = SAMPLE
+id_to_sample = setNames(metadata$SAMPLE, metadata$SAMPLE_ID)
+# Get current column names
+colnames(df.merged) = sapply(colnames(df.merged), function(col) {
+  if (col %in% names(id_to_sample)) {
+    id_to_sample[col]
+  } else {
+    col
+  }
+})
+
+
+# Reorder columns for microdecon format
+reorder_columns = function(df) {
+  first_col = names(df)[1]
+  cb_cols = grep("CB", names(df), value = TRUE)
+  neg_cols = grep("NEG|NTC", names(df), value = TRUE)
+  special_cols = c(cb_cols, neg_cols)
+  other_cols = setdiff(names(df)[-1], special_cols)
+  df[, c(first_col, special_cols, other_cols)]
+}
+
+df.reordered = reorder_columns(df.merged)
+```
+
+## D. Decontaminate
+
+```{r}
+## ---- microdecon ----
+num_blanks = sum(grepl("CB|NTC|NEG", names(df.reordered), ignore.case = TRUE))
+num_samples = ncol(df.reordered) - num_blanks - 12
+
+OTU_ID = df.reordered[, 1]
+taxonomy = df.reordered$taxon
+otu_info = df.reordered[, c(1, which(names(df.reordered) == "rank"):ncol(df.reordered))]
+counts = df.reordered[, 2:(ncol(df.reordered)-11)]
+counts = as.data.frame(lapply(counts, function(x) as.numeric(as.character(x))))
+
+otu_table_only = cbind(OTU_ID, counts, taxonomy)
+
+
+decon_result = decon(
+  otu_table_only,
+  numb.blanks = num_blanks,
+  numb.ind = num_samples,
+  taxa = T,
+  prop.thresh = 0.005,
+  thresh = 0.7
+)
+
+reads_removed = decon_result$reads.removed
+microdecon_removed = merge(decon_result$OTUs.removed, df, by = "OTU_ID")
+write.csv(microdecon_removed, file.path(paths$results_tables, "TABLE_S3_microdecon_removed_COI.csv"), row.names = FALSE)
+
+# Merge with taxonomy
+table_unfiltered = merge(decon_result$decon.table, otu_info, by = "OTU_ID")
+table_unfiltered$Mean.blank = NULL
+write.csv(table_unfiltered, file.path(paths$results_tables, "OTU_table_taxonomy_decontaminated_unfiltered_COI.csv"), row.names = FALSE)
+```

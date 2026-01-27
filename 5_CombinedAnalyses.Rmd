@@ -1,0 +1,1981 @@
+---
+title: "Timeseries Analysis"
+author: "Nichols, PK"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    theme: united
+---
+
+#1. Setup
+
+## A. Load Packages
+
+```{r setup, echo=TRUE, message=FALSE, warning=FALSE, results='hold'}
+## ---- libraries ----
+library(ggplot2)
+library(tidyverse)
+library(vegan)
+library(iNEXT)
+library(ggpubr)
+library(codyn)
+library(synchrony)
+library(randomForest)
+library(caret)
+library(scales)
+library(forcats)
+library(zetadiv)
+library(purrr)
+library(tidyr)
+library(caret)
+library(ggspatial)
+library(sf)
+library(rnaturalearth)
+library(zoo)
+library(glmmTMB)
+library(dplyr)
+library(tidyr)
+library(ggeffects)
+library(circular)
+library(mvtnorm)
+library(MuMIn)
+library(rfPermute)
+library(parallel)
+
+## ---- reproducibility ----
+set.seed(123)
+available_cores = detectCores(logical = FALSE)  # physical cores
+cores_to_use = max(1, available_cores - 1)
+
+numperm=9999
+
+## ---- paths ----
+paths=list(
+  data_raw      ="data/raw",
+  data_processed="data/processed",
+  results_rds   ="results/rds",
+  results_tables="results/tables",
+  results_figs  ="results/figures"
+)
+
+walk(paths, dir.create, showWarnings=FALSE, recursive=TRUE)
+
+## ---- plotting theme ----
+My_Theme = theme_set(theme_bw()+theme(
+  panel.grid.major = element_blank(), 
+  panel.grid.minor = element_blank(),
+  panel.background = element_blank(), 
+  panel.border = element_rect(fill=NA, colour = "black"), 
+  panel.spacing = unit(1, "lines"),
+  axis.title.x = element_text(size = 12, color="black"),
+  axis.text.x = element_text(size = 12, color="black"),
+  axis.title.y = element_text(size = 12, color = "black"),
+  axis.text.y = element_text(size=12, color = "black"),
+  legend.text = element_text(size=12, color = "black"),
+  strip.text.x = element_text(size=14, color="black"),
+  strip.text.y = element_text(size=14, color="black"),
+  strip.text = element_text(size = 14, color = "black"),
+  strip.background = element_blank(), 
+  strip.placement = "outside",
+  title = element_text(size=14, color="black", face="bold"),
+  axis.title = element_text(size=12, face="bold", colour = "black"), 
+  axis.ticks = element_blank(), 
+  axis.text = element_blank()))
+
+My_Theme = theme_set(theme_bw()+theme(
+  panel.grid.major = element_blank(), 
+  panel.grid.minor = element_blank(),
+  panel.background = element_blank(), 
+  panel.border = element_rect(fill=NA, colour = "black"), 
+  panel.spacing = unit(1, "lines"),
+  axis.title.x = element_text(size = 12, color="black"),
+  axis.text.x = element_text(size = 12, color="black"),
+  axis.title.y = element_text(size = 12, color = "black"),
+  axis.text.y = element_text(size=12, color = "black"),
+  legend.text = element_text(size=12, color = "black"),
+  strip.text.x = element_text(size=14, color="black"),
+  strip.text.y = element_text(size=14, color="black"),
+  strip.text = element_text(size = 14, color = "black"),
+  strip.background = element_blank(), 
+  strip.placement = "outside",
+  title = element_text(size=14, color="black", face="bold"),
+  axis.title = element_text(size=12, face="bold", colour = "black"), 
+  axis.ticks = element_blank(), 
+  axis.text = element_blank()))
+
+cols.site = c("#425754", "#DEB3AD","#A65B24", "#CD9629")
+cols.marker=c("#a6cdc6", "#233e34")
+
+st_err=function(x) sd(x, na.rm=TRUE) / sqrt(sum(!is.na(x)))
+```
+
+# 2. Figures
+
+## A. Figure 1
+
+### i. Map data
+
+```{r}
+metadata=read.csv(file.path(paths$data_raw, "metadata_SST.csv"), header=T)
+
+# Get the world dataset
+world = ne_states(country = "united states of america", returnclass = "sf")
+
+# Filter the dataset to focus on California
+hawaii = world[world$name == "Hawaii", ]
+
+# Define the locations and labels
+locations = data.frame(
+  Location = c("Maunalua", "Waimānalo", "Kāneʻohe", "Lanikai"),
+  Lat = c(21.275176, 21.326470, 21.434942, 21.393037),
+  Lon = c(-157.760664, -157.682236, -157.787055, -157.714236)
+)
+```
+
+### ii. Panel A
+
+```{r}
+
+# Plot the map focusing on Oahu with colored points and labels
+main_plot=ggplot(data = hawaii) +
+  geom_sf() +
+  # Drop shadow layer for points
+  #geom_point(data = locations, aes(x = Lon, y = Lat),size = 5, color = "black") +
+  geom_point(data = locations, aes(x = Lon, y = Lat, color = Location), size = 4) +  
+  #geom_text(data = locations, aes(x = Lon, y = Lat, label = Location),hjust = 0.21, vjust = -0.6, size = 6, fontface = "bold", color = "black", stroke = 0.5) + # Black outline for labels
+ geom_text(data = locations, aes(x = Lon, y = Lat, label = Location, color = Location), hjust = 0.2, vjust = -0.6, size = 6, fontface = "bold") + # Main text labels
+  annotation_scale(location = "bl", width_hint = 0.5) +
+  annotation_north_arrow(location = "bl", which_north = "true", 
+                         pad_x = unit(0.75, "in"), pad_y = unit(0.5, "in"),
+                         style = north_arrow_fancy_orienteering) +
+  scale_color_manual(values = cols.site) +
+  labs(color = "Location") +
+  coord_sf(xlim = c(-158, -157.6), ylim = c(21.2, 21.5)) +
+  My_Theme + 
+  theme(legend.position = "none") + labs(x="", y="")
+
+
+
+
+# Data for the inset map (assuming inset_map is an sf object)
+# Replace with your actual data
+inset_map = hawaii
+
+# Create the inset map plot with a smaller size and a box around it
+inset_plot = ggplot(data = inset_map) +
+  geom_sf() +
+  geom_point(data = locations[1, ], aes(x = Lon, y = Lat), color = "black", size = 2) + # Marker for Honolulu
+  coord_sf(xlim = c(-160, -154), ylim = c(18, 23)) + # Adjust the limits for the inset map
+  theme_void() + # Remove axis labels and ticks
+  theme(plot.background = element_rect(color = "black", size = 1)) # Add a black border around the plot
+
+map=main_plot + annotation_custom(ggplotGrob(inset_plot), xmin = -158, xmax = -157.9, ymin = 21.4, ymax = 21.5) + 
+  geom_text(aes(x = -157.985, y = 21.445, label = "Hawaiʻi"), 
+            hjust = 0, vjust = 1, size = 4, fontface = "bold") +
+  geom_text(aes(x = -157.985, y = 21.45, label = "Oʻahu"), 
+            hjust = 0, vjust = 0, size = 4, fontface = "bold") + 
+  geom_text(aes(x = -157.89, y = 21.33, label = "Honolulu"), 
+            hjust = 0, vjust = 1, size = 4, fontface = "bold") + geom_point(aes(x = -157.8583, y = 21.3069), color = "black", size = 3) +geom_point(aes(x = -157.8583, y = 21.3069), shape = 5, size = 6) + theme(panel.grid = element_blank()) 
+
+map
+```
+
+### ii. NMDS and Envfit data
+
+```{r}
+# ---- NMDS data ----
+nmds.data.18S=read.csv(file.path(paths$results_tables,"NMDS_data_18S.csv"), header=T)
+nmds.data.18S$MARKER="18S"
+
+nmds.data.COI=read.csv(file.path(paths$results_tables,"NMDS_data_COI.csv"), header=T)
+nmds.data.COI$MARKER="COI"
+
+nmds.data=rbind(nmds.data.18S, nmds.data.COI)
+
+# ---- Envfit data ----
+envfit.COI=read.csv(file.path(paths$results_tables,"envfit_COI.csv"), header = T)
+envfit.COI$MARKER="COI"
+```
+
+### iii. Panel B
+
+```{r}
+nmds.site = ggplot(nmds.data, aes(x = NMDS1, y = NMDS2)) +
+  geom_point(aes(colour = SITE), alpha = 0.33) +
+  geom_vline(xintercept = 0, lty = 2, col = "grey66") +
+  geom_hline(yintercept = 0, lty = 2, col = "grey66") +
+  stat_ellipse(aes(fill = SITE, colour = SITE),
+               level = 0.95, geom = "polygon", alpha = 0.3) +
+  scale_fill_manual(values = cols.site) +
+  scale_color_manual(values = cols.site) +
+  facet_wrap(~ MARKER, scales="free") +
+  My_Theme +
+  theme(legend.position = "right") 
+
+nmds.envfit=nmds.site +
+  geom_segment(
+    data = envfit.COI,
+    aes(
+      x = 0, xend = NMDS1,
+      y = 0, yend = NMDS2,
+      MARKER = MARKER
+    ),
+    arrow = arrow(length = unit(0.25, "cm")),
+    color = "black",
+    linewidth = 0.7,
+    inherit.aes = FALSE
+  ) +
+  geom_text(
+    data = envfit.COI,
+    aes(
+      x = NMDS1 * 1.1,
+      y = NMDS2 * 1.1,
+      label = Variable,
+      MARKER = MARKER
+    ),
+    size = 4,
+    fontface = "bold",
+    inherit.aes = FALSE
+  ) +theme(legend.position = "none")
+
+nmds.envfit
+```
+
+###iv. Export
+
+```{r}
+fig1=ggarrange(
+  map,
+  nmds.envfit,
+  ncol = 1,
+  nrow = 2,
+  heights = c(1.3, 1),
+  widths = c(2, 1),
+  labels = "AUTO"
+)
+
+ggsave(
+  filename = file.path(paths$results_figs, "FIGURE_1.pdf"),
+  plot     = fig1,
+  width    = 6,
+  height   = 8,
+  units    = "in",
+  device   = cairo_pdf,
+  family   = "Arial"
+)
+```
+
+## B. Figure 2
+
+### i. Zeta diversity data
+
+```{r}
+## Marker Decay
+zeta.str.decay.18S=read.csv(file.path(paths$results_tables, "zeta_decay_marker18S.csv"), header = T)
+zeta.str.decay.COI=read.csv(file.path(paths$results_tables, "zeta_decay_markerCOI.csv"), header = T)
+zeta.str.decay=rbind(zeta.str.decay.18S, zeta.str.decay.COI)
+
+## Marker Ratio
+zeta.str.ratio.18S=read.csv(file.path(paths$results_tables, "zeta_ratio_marker18S.csv"), header = T)
+zeta.str.ratio.COI=read.csv(file.path(paths$results_tables, "zeta_ratio_markerCOI.csv"), header=T)
+zeta.str.ratio=rbind(zeta.str.ratio.18S, zeta.str.ratio.COI)
+
+## Site-wise Decay
+zeta.str.site.18S=read.csv(file.path(paths$results_tables, "zeta_decay_18S.csv"), header=T)
+zeta.str.site.COI=read.csv(file.path(paths$results_tables, "zeta_decay_COI.csv"), header=T)
+zeta.str.site=rbind(zeta.str.site.18S, zeta.str.site.COI)
+
+
+#combined structure decay and ratio
+zeta.str.decay$variable="Zeta Decay"
+zeta.decay.long = zeta.str.decay %>%
+  transmute(
+    zeta.order,
+    y = zeta.val,
+    sd = zeta.val.sd,
+    Marker,
+    variable
+  )
+
+zeta.str.ratio$variable="Zeta Ratio"
+zeta.ratio.long = zeta.str.ratio %>%
+  transmute(
+    zeta.order,
+    y = ratio,
+    sd = NA_real_,
+    Marker,
+    variable
+  )
+
+zeta.str = bind_rows(zeta.decay.long, zeta.ratio.long)
+```
+
+###ii. Decay and ratio plots
+
+#### a. Panels A-B
+
+```{r}
+zeta.markerplot=zeta.str %>% 
+  ggplot(aes(x = zeta.order, y = y, color = Marker)) + # Map color to MARKER
+  geom_point() + # Points inherit color from aes
+  geom_line() +  # Lines inherit color from aes
+  geom_ribbon(
+    aes(ymin = y - sd, ymax = y + sd, fill = Marker), 
+    alpha = 0.1, # Transparency for the ribbon
+    color = NA # No border color
+  ) +
+  scale_color_manual(values = cols.marker) + # Custom colors for MARKER
+  scale_fill_manual(values = cols.marker) +  # Ribbon fill colors based on MARKER
+  ylab("Proportion") +
+  xlab("") + facet_wrap(~variable) +
+  My_Theme + theme(legend.position = "right") + xlim(0,16)+ ylim(0,1)+scale_y_log10()
+```
+
+
+#### b. Panels C-D
+
+```{r}
+zeta.siteplot = zeta.str.site %>% 
+  ggplot(aes(x = zeta.order, y = zeta.val, color = Site)) + # Map color to MARKER
+  geom_point() + # Points inherit color from aes
+  geom_line() +  # Lines inherit color from aes
+  geom_ribbon(
+    aes(ymin = zeta.val - zeta.val.sd, ymax = zeta.val + zeta.val.sd, fill = Site), 
+    alpha = 0.1, # Transparency for the ribbon
+    color = NA # No border color
+  ) +
+  scale_color_manual(values = cols.site) + # Custom colors for MARKER
+  scale_fill_manual(values = cols.site) +  # Ribbon fill colors based on MARKER
+  ylab("Proportion") +
+  xlab("Zeta Order") + facet_wrap(~Marker) +
+  My_Theme + theme(legend.position = "right")+ xlim(0,16) + ylim(0,1)+ scale_y_log10()
+```
+
+###iii. Export
+
+```{r}
+fig2=ggarrange(zeta.markerplot, zeta.siteplot, ncol = 1, nrow = 2, align = "hv", legend = "none")
+fig2
+ggsave(
+  filename = file.path(paths$results_figs, "FIGURE_2.pdf"),
+  plot     = fig2,
+  width    = 8,
+  height   = 5,
+  units    = "in",
+  device   = cairo_pdf,
+  family   = "Arial"
+)
+```
+
+## C. Figure 3
+
+### i. Core taxa by site
+
+```{r}
+taxon_counts_site_18S=read.csv(file.path(paths$results_tables, "coreMOTUs_site_18S.csv"), header = T)
+taxon_counts_site_COI=read.csv(file.path(paths$results_tables, "coreMOTUs_site_COI.csv"), header = T)
+taxon_counts_site = rbind(taxon_counts_site_18S, taxon_counts_site_COI)
+
+# Remove NA phyla
+taxon_counts_site = taxon_counts_site %>% filter(!is.na(phylum))
+
+# Define manual order (same for both markers)
+desired_order = c("Hemichordata","Chordata", "Ochrophyta","Annelida","Mollusca","Rhodophyta","Cnidaria","Chlorophyta","Porifera", "NA")
+
+
+# Apply factor levels
+taxon_counts_site = taxon_counts_site %>%
+  mutate(phylum = factor(phylum, levels = desired_order))
+
+# Remove NA phyla
+taxon_counts_site = taxon_counts_site %>%
+  filter(!is.na(phylum))
+
+fig3 = ggplot(taxon_counts_site, aes(x = phylum, y = n, fill = Site)) +
+  geom_bar(stat = "identity", position = "stack") +
+  labs(x = "", y = "Total MOTUs") + 
+  My_Theme +
+  theme(
+    plot.margin = unit(c(5, 20, 5, 5), "pt"),
+    axis.text.y = element_text(size = 10, hjust = 1),
+    legend.position = "none"
+  ) +
+  scale_fill_manual(values = cols.site) +
+  facet_wrap(~ Marker)+
+   scale_y_sqrt() +coord_flip() 
+fig3
+```
+
+###ii. Export
+
+```{r}
+ggsave(
+  filename = file.path(paths$results_figs, "FIGURE_3.pdf"),
+  plot     = fig3,
+  width    = 7,
+  height   = 4,
+  units    = "in",
+  device   = cairo_pdf,
+  family   = "Arial"
+)
+```
+
+##D. Figure 5
+
+### i. Alpha diversity data
+
+```{r}
+div.18S = read.csv(
+  file.path(paths$results_tables, "alpha_div_18S_iNEXT.csv"),
+  header = TRUE
+)
+div.18S$MARKER = "18S"
+div.18S$prop = div.18S$Hill_q0 / max(div.18S$Hill_q0, na.rm = TRUE)
+
+div.COI = read.csv(
+  file.path(paths$results_tables, "alpha_div_COI_iNEXT.csv"),
+  header = TRUE
+)
+div.COI$MARKER = "COI"
+div.COI$prop = div.COI$Hill_q0 / max(div.COI$Hill_q0, na.rm = TRUE)
+
+# Combine
+data_alphadiv = rbind(div.18S, div.COI)
+
+# ===============================
+# Data preparation
+# ===============================
+alpha = subset(data_alphadiv, STEP != 1)
+alpha$STEP = as.factor(alpha$STEP)
+
+alpha$DATE = as.character(alpha$DATE)
+
+# Parse as DD/MM/YYYY
+alpha$DATE = as.Date(alpha$DATE, format = "%d/%m/%Y")
+
+# Create MM/YY label
+alpha$MONTH_YEAR = format(alpha$DATE, "%m/%y")
+
+# Order chronologically
+alpha$MONTH_YEAR = factor(
+  alpha$MONTH_YEAR,
+  levels = unique(alpha$MONTH_YEAR[
+    order(as.yearmon(alpha$MONTH_YEAR, "%m/%y"))
+  ])
+)
+
+# ===============================
+# SST summary
+# ===============================
+alpha_avg_SST = alpha %>%
+  group_by(MONTH_YEAR) %>%
+  summarise(mean_SST = mean(SST, na.rm = TRUE), .groups = "drop")
+
+```
+
+###ii. Panel A
+
+```{r}
+# ===============================
+# Shading indices (based on MM/YY)
+# ===============================
+shading_start_index  = which(levels(alpha$MONTH_YEAR) == "09/19")
+shading_end_index    = which(levels(alpha$MONTH_YEAR) == "11/19")
+
+shading_start_index2 = which(levels(alpha$MONTH_YEAR) == "09/20")
+shading_end_index2   = which(levels(alpha$MONTH_YEAR) == "11/20")
+
+# ===============================
+# Vertical line positions
+# ===============================
+step_levels = levels(alpha$MONTH_YEAR)
+vline_positions = seq(1.5, length(step_levels) - 0.5, by = 1)
+
+# ===============================
+# Plot
+# ===============================
+richnesstimestep = ggplot(
+  alpha,
+  aes(x = MONTH_YEAR, y = prop, fill = MARKER)
+) +
+
+  # Shaded periods
+  annotate(
+    "rect",
+    xmin = shading_start_index - 0.5,
+    xmax = shading_end_index + 0.5,
+    ymin = -Inf, ymax = Inf,
+    fill = "grey55", alpha = 0.3
+  ) +
+  annotate(
+    "rect",
+    xmin = shading_start_index2 - 0.5,
+    xmax = shading_end_index2 + 0.5,
+    ymin = -Inf, ymax = Inf,
+    fill = "grey55", alpha = 0.3
+  ) +
+
+  # Vertical separators
+  geom_vline(
+    xintercept = vline_positions,
+    linetype = "dashed",
+    color = "grey"
+  ) +
+
+  # SST line (scaled to richness axis)
+  geom_line(
+    data = alpha_avg_SST,
+    aes(
+      x = MONTH_YEAR,
+      y = (mean_SST - 18) / (28 - 18),
+      group = 1
+    ),
+    color = "black",
+    size = 0.8, inherit.aes = F
+  ) +
+
+  # Distributions
+  geom_violin(alpha = 0.5, scale = "width") +
+  geom_boxplot(
+    width = 0.2,
+    position = position_dodge(width = 0.8),
+    outlier.shape = NA,
+    alpha = 0.7
+  ) +
+
+  # Axes
+  scale_y_continuous(
+    name = "Richness",
+    sec.axis = sec_axis(
+      ~ . * (28 - 18) + 18,
+      name = "SST (°C)",
+      breaks = seq(18, 28, by = 1)
+    )
+  ) +
+
+  scale_fill_manual(values = cols.marker) +
+  labs(x = "", y = "Richness") +
+
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+```
+
+###iii. Turnover data
+
+```{r}
+# Read the data
+turnover.18S = read.csv(file.path(paths$results_tables, "turnover_18S.csv"), header = T)
+turnover.COI = read.csv(file.path(paths$results_tables, "turnover_COI.csv"), header = T)
+
+# Combine the data
+turnover.site = rbind(turnover.18S, turnover.COI)
+
+# Reorder SITE so "Overall" is the first level
+turnover.site$SITE = fct_relevel(turnover.site$SITE, "Overall")
+
+# Define colors for sites
+site_levels = levels(turnover.site$SITE)
+site_colors = c("Overall" = "black", setNames(cols.site, site_levels[-1]))
+
+# Assign final color based on Measure and SITE
+turnover.site$final_color = ifelse(
+  turnover.site$Measure == "Total",
+  ifelse(turnover.site$SITE == "Overall", "Overall", as.character(turnover.site$SITE)),
+  as.character(turnover.site$Measure)
+)
+
+# Convert MonthYear to Date using proper parsing
+turnover.site$MonthYearDate = as.Date(paste0("01/", turnover.site$MonthYear), format = "%d/%m/%y")
+
+# Order data by MonthYearDate and update MonthYear factor levels
+turnover.site = turnover.site[order(turnover.site$MonthYearDate), ]
+turnover.site$MonthYear = factor(turnover.site$MonthYear, levels = unique(turnover.site$MonthYear))
+```
+
+### iv. Panel B
+
+```{r}
+
+# Select every other label for x-axis
+labels_to_show = levels(turnover.site$MonthYear)[seq(1, length(levels(turnover.site$MonthYear)), by = 2)]
+
+# Identify the index positions for the shading range
+shading_start_index = which(levels(turnover.site$MonthYear) == "09/19")
+shading_end_index = which(levels(turnover.site$MonthYear) == "11/19")
+
+shading_start_index2 = which(levels(turnover.site$MonthYear) == "09/20")
+shading_end_index2 = which(levels(turnover.site$MonthYear) == "11/20")
+
+labels_to_show = levels(turnover.site$MonthYear)[seq(1, length(levels(turnover.site$MonthYear)), by = 3)]
+
+
+# Create the plot with background shading
+turnover.site.plot = ggplot(turnover.site, aes(x = MonthYear, y = value, color = final_color, linetype = Measure, group = interaction(Measure, SITE), shape = Measure)) +
+  annotate("rect", xmin = shading_start_index-2, xmax = shading_end_index, ymin = -Inf, ymax = Inf, 
+           fill = "grey95", alpha = 1) +
+  annotate("rect", xmin = shading_start_index2, xmax = shading_end_index2, ymin = -Inf, ymax = Inf, 
+           fill = "grey95", alpha = 1) + geom_vline(xintercept = c(shading_end_index2, shading_end_index, shading_start_index2), 
+             linetype = "dashed", color = "grey80", size = 0.7, alpha = 0.6)+
+  geom_line(aes(linewidth = Measure)) +  # Apply linewidth mapping
+  ylab("Turnover")+
+  xlab("") +
+  theme_bw(base_size = 18) +
+  scale_x_discrete(
+    breaks = labels_to_show,  
+    labels = labels_to_show  
+  ) +
+  facet_grid(Marker ~ SITE) +
+  My_Theme +
+  scale_color_manual(values = c(cols.site, site_colors, "Appearance" = "black", "Disappearance"="grey33")) +  # Change color of "Disappearance" to dark grey
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none") +
+  scale_linetype_manual(values = c("Total" = "solid", "Appearance" = "solid", "Disappearance" = "dotdash")) +
+  scale_shape_manual(values = c("Total" = 19, "Appearance" = 16, "Disappearance" = 15)) + 
+  scale_linewidth_manual(values = c("Total" = 1.5, "Appearance" = 0.5, "Disappearance" = 0.5)) +
+  theme(legend.position = "none")
+```
+
+### v. Export
+
+```{r}
+fig5=ggarrange(richnesstimestep, turnover.site.plot, ncol = 1, labels = "AUTO", font.label = list(size = 18, color = "black", face = "bold", family = "Arial"))
+fig5
+ggsave(
+  filename = file.path(paths$results_figs, "FIGURE_5.pdf"),
+  plot     = fig5,
+  width    = 9,
+  height   = 8,
+  units    = "in",
+  device   = cairo_pdf,
+  family   = "Arial"
+)
+```
+
+## E. Figure 4
+
+###i. Correlates data
+
+#### a. Richness
+
+```{r}
+alpha.mod=alpha
+# Create prop2 scaled away from exact 0 and 1 - Smithson & Verkuilen correction
+alpha.mod$prop2 = (alpha.mod$prop * (nrow(alpha.mod) - 1) + 0.5) / nrow(alpha.mod)
+
+# Step 1: Scale continuous predictors
+alpha.mod$SST_scaled = scale(alpha.mod$SST)
+alpha.mod$tide_scaled = scale(alpha.mod$tide_height_m)
+alpha.mod$wave_scaled = scale(alpha.mod$WVHT)
+alpha.mod$wind_scaled = scale(alpha.mod$WSPD)
+alpha.mod$illum_scaled = scale(alpha.mod$illum)
+alpha.mod$lunar_sin = sin(pi * alpha.mod$degrees / 180)
+alpha.mod$lunar_cos = cos(pi * alpha.mod$degrees / 180)
+alpha.mod$WDIR_rad = alpha.mod$WDIR * pi / 180
+alpha.mod$WDIR_sin = sin(alpha.mod$WDIR_rad)
+alpha.mod$WDIR_cos = cos(alpha.mod$WDIR_rad)
+alpha.mod$MWD_rad = alpha.mod$MWD * pi / 180
+alpha.mod$MWD_sin = sin(alpha.mod$MWD_rad)
+alpha.mod$MWD_cos = cos(alpha.mod$MWD_rad)
+alpha.mod$SITE = as.factor(alpha.mod$SITE)
+alpha.mod$MARKER = as.factor(alpha.mod$MARKER)
+alpha.mod$SEASON = as.factor(alpha.mod$SEASON)
+```
+
+####b. eDNA Index 
+
+```{r}
+data.long.18S=read.csv(file.path(paths$data_processed, "data_long_18S.csv"), header=T)
+data.long.18S$MARKER="18S"
+
+data.long.COI=read.csv(file.path(paths$data_processed, "data_long_COI.csv"), header=T)
+data.long.COI$MARKER="COI"
+
+data.long.all=rbind(data.long.18S, data.long.COI)
+
+data.long.top5 = subset(data.long.all, phylum %in% c("Arthropoda", "Annelida", "Cnidaria", "Mollusca", "Porifera"))
+# Create prop2 scaled away from exact 0 and 1 - Smithson & Verkuilen correction
+data.long.top5$value2 = (data.long.top5$abundance * (nrow(data.long.top5) - 1) + 0.5) / nrow(data.long.top5)
+
+# -------------------------------
+# 1. Prepare phylum-level data
+# -------------------------------
+data.long.top5 = data.long.top5 %>%
+  mutate(
+    SST_scaled = scale(SST),
+    tide_scaled = scale(tide_height_m),
+    wave_scaled = scale(WVHT),
+    wind_scaled = scale(WSPD),
+    illum_scaled = scale(illum)
+  )
+
+# -------------------------------
+# 2. Circular predictors
+# -------------------------------
+# Convert to circular objects
+MWD_circ   = circular(data.long.top5$MWD,   units = "degrees", modulo = "2pi")
+WDIR_circ  = circular(data.long.top5$WDIR,  units = "degrees", modulo = "2pi")
+lunar_circ = circular(data.long.top5$degrees, units = "degrees", modulo = "2pi")
+
+# Compute circular means
+MWD_mean   = mean(MWD_circ, na.rm = T)
+WDIR_mean  = mean(WDIR_circ, na.rm = T)
+lunar_mean = mean(lunar_circ, na.rm=T)
+
+# Center around circular mean
+data.long.top5 = data.long.top5 %>%
+  mutate(
+    MWD_centered   = as.numeric(MWD_circ - MWD_mean),
+    WDIR_centered  = as.numeric(WDIR_circ - WDIR_mean),
+    lunar_centered = as.numeric(lunar_circ - lunar_mean)
+  )
+
+# Convert to radians for sine/cosine transforms
+data.long.top5 = data.long.top5 %>%
+  mutate(
+    MWD_rad   = MWD_centered * pi / 180,
+    WDIR_rad  = WDIR_centered * pi / 180,
+    lunar_rad = lunar_centered * pi / 180,
+    MWD_sin  = sin(MWD_rad),
+    MWD_cos  = cos(MWD_rad),
+    WDIR_sin = sin(WDIR_rad),
+    WDIR_cos = cos(WDIR_rad),
+    lunar_sin = sin(lunar_rad),
+    lunar_cos = cos(lunar_rad)
+  )
+
+# -------------------------------
+# 3. Factor variables
+# -------------------------------
+data.long.top5 = data.long.top5 %>%
+  mutate(
+    SITE = as.factor(SITE),
+    MARKER = as.factor(MARKER),
+    SEASON = as.factor(SEASON)
+  )
+
+phylum_counts = data.long.top5 %>%
+  # Replace blank or NA phylum with "Unknown"
+  mutate(phylum = ifelse(phylum == "" | is.na(phylum), "Unknown", phylum)) %>%
+  mutate(phylum = factor(phylum))
+
+
+phylum_counts_clean = phylum_counts %>%
+  drop_na(wave_scaled, MWD, MWD_sin, MWD_cos)
+```
+
+###ii. GLMER
+
+####a. Richness Model
+
+```{r}
+model_beta = glmmTMB(
+  prop2 ~ SEASON + SST_scaled + wind_scaled + wave_scaled + tide_scaled +
+    lunar_sin + lunar_cos + MWD_sin + MWD_cos + WDIR_sin + WDIR_cos + (1|SITE) + (1 | MARKER), data = alpha.mod,
+  family = beta_family(link = "logit"),
+  na.action = na.omit
+)
+
+summary(model_beta)
+sum_richness=summary(model_beta)
+
+rsq_richness=r.squaredGLMM(model_beta)
+
+summarytable_richness=as.data.frame(sum_richness$coefficients$cond)
+summarytable_richness$R2m=rsq_richness[1]
+summarytable_richness$R2c=rsq_richness[2]
+
+write.csv(summarytable_richness, file=file.path(paths$results_tables, "TABLE_S6_GLMER_richness_results.csv"))
+```
+
+####b. eDNA Index Model
+
+```{r}
+model_beta_reads = glmmTMB(
+  value2 ~ SEASON + SST_scaled + wind_scaled + wave_scaled + tide_scaled +
+    lunar_sin + lunar_cos + MWD_sin + MWD_cos + WDIR_sin + WDIR_cos + (1|SITE) + (1 | MARKER) + (1 | phylum), data = phylum_counts,
+  family = beta_family(link = "logit"),
+  na.action = na.omit
+)
+
+summary(model_beta_reads)
+sum_reads=summary(model_beta_reads)
+
+rsq_reads=r.squaredGLMM(model_beta_reads)
+
+summarytable_reads=as.data.frame(sum_reads$coefficients$cond)
+summarytable_reads$R2m=rsq_reads[1]
+summarytable_reads$R2c=rsq_reads[2]
+
+write.csv(summarytable_reads, file=file.path(paths$results_tables, "TABLE_S7_GLMER_reads_results.csv"))
+```
+
+###iii. Predictor Plots
+
+#### a. Cyclic predictors
+
+##### Lunar angle
+
+```{r}
+predictor = "lunar"  # options: "MWD", "WDIR", "lunar"
+# -------------------------------
+# 1. Function to predict cyclic variables + optional observed overlay
+# -------------------------------
+predict_cyclic = function(model, predictor, model_label,
+                           ref_data,  # original dataset for factor levels
+                           metadata = NULL,  # dataframe with observed values
+                           obs_var = NULL,   # column in metadata for observed variable
+                           n_points = 500,
+                           color_line = "black",
+                           linetype_line = "solid",
+                           polar = FALSE) {
+
+  # ---- 1a. Sequence for cyclic predictor ----
+  angle_seq = seq(0, 2*pi, length.out = n_points)
+  
+  # ---- 1b. Template newdata ----
+  newdata = data.frame(
+    WDIR_sin = 0, WDIR_cos = 1,
+    MWD_sin  = 0, MWD_cos  = 1,
+    lunar_sin = 0, lunar_cos = 1,
+    SST_scaled  = 0,
+    wind_scaled = 0,
+    wave_scaled = 0,
+    tide_scaled = 0,
+    SEASON = "Dry",
+    SITE = NA,
+    MARKER = NA
+  )
+  newdata = newdata[rep(1, n_points), ]
+
+  # ---- 1c. Vary chosen cyclic predictor ----
+  if(predictor == "WDIR") {
+    newdata$WDIR_sin = sin(angle_seq)
+    newdata$WDIR_cos = cos(angle_seq)
+  } else if(predictor == "MWD") {
+    newdata$MWD_sin = sin(angle_seq)
+    newdata$MWD_cos = cos(angle_seq)
+  } else if(predictor == "lunar") {
+    newdata$lunar_sin = sin(angle_seq)
+    newdata$lunar_cos = cos(angle_seq)
+  }
+
+  # ---- 1d. Match factor levels ----
+  factor_vars = names(ref_data)[sapply(ref_data, is.factor)]
+  for(f in factor_vars) {
+    if(f %in% names(newdata)) {
+      newdata[[f]] = factor(newdata[[f]], levels = levels(ref_data[[f]]))
+    }
+  }
+
+  newdata$direction_deg = angle_seq * 180/pi
+
+  # -------------------------------
+  # 2. Simulate predictions
+  # -------------------------------
+  beta_hat = fixef(model)$cond
+  V_beta   = vcov(model)$cond
+
+  X = model.matrix(
+    ~ SEASON + SST_scaled + wind_scaled + wave_scaled + tide_scaled +
+      lunar_sin + lunar_cos + MWD_sin + MWD_cos + WDIR_sin + WDIR_cos,
+    data = newdata
+  )
+
+  beta_sim = mvtnorm::rmvnorm(1000, mean = beta_hat, sigma = V_beta)
+  intercept_sim = beta_sim[, "(Intercept)"]
+  beta_sim_sub = beta_sim[, colnames(X)]
+
+  eta_sim = X %*% t(beta_sim_sub)
+  eta_sim = sweep(eta_sim, 2, intercept_sim, "+")
+
+  if("SEASONWet" %in% colnames(beta_sim)) {
+    eta_sim = sweep(eta_sim, 2, beta_sim[, "SEASONWet"], "+")
+  }
+
+  mu_sim = plogis(eta_sim)
+
+  newdata$fit   = apply(mu_sim, 1, mean)
+  newdata$lower = apply(mu_sim, 1, quantile, 0.025)
+  newdata$upper = apply(mu_sim, 1, quantile, 0.975)
+  newdata$model = model_label
+  newdata$color_line = color_line
+  newdata$linetype_line = linetype_line
+
+  # -------------------------------
+  # 3. Observed frequency overlay (linear) ----
+  obs_plot = NULL
+  if(!is.null(metadata) & !is.null(obs_var)) {
+    obs_plot = metadata %>%
+      select(all_of(obs_var)) %>%
+      filter(!is.na(.data[[obs_var]])) %>%
+      mutate(bin = cut(.data[[obs_var]], breaks = seq(0, 360, length.out = 51), include.lowest = TRUE)) %>%
+      group_by(bin) %>%
+      summarise(freq = n()) %>%
+      mutate(direction_deg = seq(0, 360, length.out = n()+1)[-1],
+             freq_scaled = freq / max(freq))
+  }
+
+  # -------------------------------
+  # 4. Plot
+  # -------------------------------
+  p = ggplot(newdata, aes(x = direction_deg)) +
+    geom_ribbon(aes(ymin = lower, ymax = upper),
+                fill = "grey", alpha = 0.25) +
+    geom_line(aes(y = fit),
+              colour = color_line,
+              size = 1.2,
+              linetype = linetype_line)
+
+  # add observed frequencies if available
+  if(!is.null(obs_plot)) {
+    p = p + geom_bar(data = obs_plot,
+                      aes(x = direction_deg, y = freq_scaled),
+                      stat = "identity",
+                      fill = "grey70", alpha = 0.5,
+                      width = 7)
+  }
+
+  p = p +
+    labs(x = paste0(predictor, " angle (degrees)"),
+         y = "Predicted response / scaled frequency") +
+    theme_classic() +
+    ylim(0,1)
+
+  if(polar) p = p + coord_polar(start = 0) + theme_minimal()
+
+  return(list(predictions = newdata, obs = obs_plot, plot = p))
+}
+
+# -------------------------------
+# 5. Example usage for two models
+# -------------------------------
+pred_wdir_rich = predict_cyclic(model_beta, predictor,
+                                 "Detected richness",
+                                 ref_data = alpha.mod,
+                                 metadata = metadata,
+                                 obs_var = "WDIR",
+                                 color_line = "#4c5c68",
+                                 linetype_line = "dashed")
+
+pred_wdir_edna = predict_cyclic(model_beta_reads, predictor,
+                                 "eDNA index",
+                                 ref_data = phylum_counts,
+                                 metadata = metadata,
+                                 obs_var = "WDIR",
+                                 color_line = "#4c5c68",
+                                 linetype_line = "solid")
+
+# -------------------------------
+# 6. Combine predictions if needed
+# -------------------------------
+pred_all = bind_rows(pred_wdir_rich$predictions,
+                      pred_wdir_edna$predictions)
+
+# -------------------------------
+# 7. Linear waveform plot
+# -------------------------------
+lunarplot=ggplot() +
+  # Bar plot for scaled frequency
+  geom_bar(
+    data = pred_wdir_rich$obs,
+    aes(x = direction_deg, y = freq_scaled),
+    stat = "identity",
+    fill = "tan", alpha = 0.5,
+    width = 17
+  ) +
+  # Predicted response ribbons and lines
+  # eDNA index
+  geom_ribbon(
+    data = subset(pred_all, model=="eDNA index"),
+    aes(x = direction_deg, ymin = lower, ymax = upper),
+    fill = "black", alpha = 0.1
+  ) +
+  geom_line(
+    data = subset(pred_all, model=="eDNA index"),
+    aes(x = direction_deg, y = fit),
+    colour = "black",
+    size = 1, linetype="solid"
+  ) +
+    # Detected richness
+  geom_ribbon(
+    data = subset(pred_all, model=="Detected richness"),
+    aes(x = direction_deg, ymin = lower, ymax = upper),
+    fill = "#1985a1", alpha = 0.1
+  ) +
+  geom_line(
+    data = subset(pred_all, model=="Detected richness"),
+    aes(x = direction_deg, y = fit),
+    colour = "#1985a1", #significant predictor
+    size = 1.2, linetype="dashed"
+  ) +
+  # Axis labels
+  scale_y_continuous(
+    name = "",           # left axis
+    limits = c(0, 1),
+    sec.axis = sec_axis(~ ., name = "")  # right axis
+  ) +
+  labs(title = "F", x = paste0(predictor, " angle (degrees)")) +
+  My_Theme + theme(
+    axis.ticks = element_blank(),   # remove tick marks
+    axis.text.y = element_blank(),  # remove y-axis text
+    axis.text.x = element_text()    # keep x-axis text if needed
+  )
+lunarplot
+
+ggsave(
+  filename = file.path(paths$results_figs, "FIGURE_4F.pdf"),
+  plot     = lunarplot,
+  width    = 4,
+  height   = 4,
+  units    = "in",
+  device   = cairo_pdf,
+  family   = "Arial"
+)
+```
+
+##### Wave angle
+
+```{r}
+predictor = "MWD"  # options: "MWD", "WDIR", "lunar"
+
+pred_mwd_rich = predict_cyclic(model_beta, predictor,
+                                 "Detected richness",
+                                 ref_data = alpha.mod,
+                                 metadata = metadata,
+                                 obs_var = "WDIR",
+                                 color_line = "#4c5c68",
+                                 linetype_line = "dashed")
+
+pred_mwd_edna = predict_cyclic(model_beta_reads, predictor,
+                                 "eDNA index",
+                                 ref_data = phylum_counts,
+                                 metadata = metadata,
+                                 obs_var = "WDIR",
+                                 color_line = "#4c5c68",
+                                 linetype_line = "solid")
+
+# -------------------------------
+# 6. Combine predictions if needed
+# -------------------------------
+pred_all = bind_rows(pred_mwd_rich$predictions,
+                      pred_mwd_edna$predictions)
+
+# -------------------------------
+# 7. Linear waveform plot
+# -------------------------------
+mwdplot=ggplot() +
+  # Bar plot for scaled frequency
+  geom_bar(
+    data = pred_mwd_rich$obs,
+    aes(x = direction_deg, y = freq_scaled),
+    stat = "identity",
+    fill = "tan", alpha = 0.5,
+    width = 17
+  ) +
+  # Predicted response ribbons and lines
+  # Detected richness
+  geom_ribbon(
+    data = subset(pred_all, model=="Detected richness"),
+    aes(x = direction_deg, ymin = lower, ymax = upper),
+    fill = "black", alpha = 0.1
+  ) +
+  geom_line(
+    data = subset(pred_all, model=="Detected richness"),
+    aes(x = direction_deg, y = fit),
+    colour = "black",
+    size = 1, linetype="dashed"
+  ) +
+  # eDNA index
+  geom_ribbon(
+    data = subset(pred_all, model=="eDNA index"),
+    aes(x = direction_deg, ymin = lower, ymax = upper),
+    fill = "#1985a1", alpha = 0.1
+  ) +
+  geom_line(
+    data = subset(pred_all, model=="eDNA index"),
+    aes(x = direction_deg, y = fit),
+    colour = "#1985a1", # significant predictor
+    size = 1.2, linetype="solid"
+  ) +
+  # Axis labels
+  scale_y_continuous(
+    name = "",           # left axis
+    limits = c(0, 1),
+    sec.axis = sec_axis(~ ., name = "Observed frequency")  # right axis
+  ) +
+  labs(title = "D", x = paste0(predictor, " angle (degrees)")) +
+  My_Theme 
+mwdplot
+
+ggsave(
+  filename = file.path(paths$results_figs, "FIGURE_4D.pdf"),
+  plot     = mwdplot,
+  width    = 4,
+  height   = 4,
+  units    = "in",
+  device   = cairo_pdf,
+  family   = "Arial"
+)
+```
+
+##### Wind angle
+
+```{r}
+predictor = "WDIR"  # options: "MWD", "WDIR", "lunar"
+
+pred_wdir_rich = predict_cyclic(model_beta, predictor,
+                                 "Detected richness",
+                                 ref_data = alpha.mod,
+                                 metadata = metadata,
+                                 obs_var = "WDIR",
+                                 color_line = "#4c5c68",
+                                 linetype_line = "dashed")
+
+pred_wdir_edna = predict_cyclic(model_beta_reads, predictor,
+                                 "eDNA index",
+                                 ref_data = phylum_counts,
+                                 metadata = metadata,
+                                 obs_var = "WDIR",
+                                 color_line = "#4c5c68",
+                                 linetype_line = "solid")
+
+# -------------------------------
+# 6. Combine predictions if needed
+# -------------------------------
+pred_all = bind_rows(pred_wdir_rich$predictions,
+                      pred_wdir_edna$predictions)
+
+# -------------------------------
+# 7. Linear waveform plot
+# -------------------------------
+wdirplot=ggplot() +
+  # Bar plot for scaled frequency
+  geom_bar(
+    data = pred_wdir_rich$obs,
+    aes(x = direction_deg, y = freq_scaled),
+    stat = "identity",
+    fill = "tan", alpha = 0.5,
+    width = 17
+  ) +
+  # Predicted response ribbons and lines
+  # Detected richness
+  geom_ribbon(
+    data = subset(pred_all, model=="Detected richness"),
+    aes(x = direction_deg, ymin = lower, ymax = upper),
+    fill = "#4c5c68", alpha = 0.1
+  ) +
+  geom_line(
+    data = subset(pred_all, model=="Detected richness"),
+    aes(x = direction_deg, y = fit),
+    colour = "#1985a1", #significant predictor
+    size = 1.2, linetype="dashed"
+  ) +
+  # eDNA index
+  geom_ribbon(
+    data = subset(pred_all, model=="eDNA index"),
+    aes(x = direction_deg, ymin = lower, ymax = upper),
+    fill = "#1985a1", alpha = 0.1
+  ) +
+  geom_line(
+    data = subset(pred_all, model=="eDNA index"),
+    aes(x = direction_deg, y = fit),
+    colour = "#1985a1", # significant predictor
+    size = 1.2, linetype="solid"
+  ) +
+  # Axis labels
+  scale_y_continuous(
+    name = "",           # left axis
+    limits = c(0, 1),
+    sec.axis = sec_axis(~ ., name = "")  # right axis
+  ) +
+  labs(title="B", x = paste0(predictor, " angle (degrees)")) +
+  My_Theme + theme(
+    axis.ticks = element_blank(),   # remove tick marks
+    axis.text.y = element_blank(),  # remove y-axis text
+    axis.text.x = element_text()    # keep x-axis text if needed
+  )
+wdirplot
+
+ggsave(
+  filename = file.path(paths$results_figs, "FIGURE_4B.pdf"),
+  plot     = wdirplot,
+  width    = 4,
+  height   = 4,
+  units    = "in",
+  device   = cairo_pdf,
+  family   = "Arial"
+)
+```
+
+
+####b. Scaled linear predictors
+
+##### SST
+
+```{r}
+predictor = "SST_scaled"   # options: "SST_scaled", "wind_scaled", "wave_scaled", "tide_scaled"
+
+# -------------------------------
+# 1. Store scaling info from original data and mapping to metadata
+# -------------------------------
+scaling = list(
+  SST_scaled  = list(orig = "SST", mean = mean(alpha.mod$SST, na.rm=TRUE), sd = sd(alpha.mod$SST, na.rm=TRUE)),
+  wind_scaled = list(orig = "WSPD", mean = mean(alpha.mod$WSPD, na.rm=TRUE), sd = sd(alpha.mod$WSPD, na.rm=TRUE)),
+  wave_scaled = list(orig = "WVHT", mean = mean(alpha.mod$WVHT, na.rm=TRUE), sd = sd(alpha.mod$WVHT, na.rm=TRUE)),
+  tide_scaled = list(orig = "tide_height_m", mean = mean(alpha.mod$tide_height_m, na.rm=TRUE), sd = sd(alpha.mod$tide_height_m, na.rm=TRUE))
+)
+
+# -------------------------------
+# 2. Function to predict linear variable and optionally overlay observed data
+# -------------------------------
+predict_linear_unscaled = function(model, predictor, model_label,
+                                    ref_data, metadata = NULL,
+                                    n_points = 500,
+                                    color_line = "black",
+                                    linetype_line = "solid") {
+
+  # realistic range for scaled predictor
+  pred_seq = seq(min(ref_data[[predictor]], na.rm = TRUE),
+                  max(ref_data[[predictor]], na.rm = TRUE),
+                  length.out = n_points)
+
+  # template newdata
+  newdata = data.frame(
+    SST_scaled  = 0,
+    wind_scaled = 0,
+    wave_scaled = 0,
+    tide_scaled = 0,
+    lunar_sin = 0, lunar_cos = 1,
+    MWD_sin = 0, MWD_cos = 1,
+    WDIR_sin = 0, WDIR_cos = 1,
+    SEASON = "Dry",
+    SITE = NA,
+    MARKER = NA
+  )
+  newdata = newdata[rep(1, n_points), ]
+  newdata[[predictor]] = pred_seq
+
+  # ensure factors match
+  factor_vars = names(ref_data)[sapply(ref_data, is.factor)]
+  for(f in factor_vars) {
+    if(f %in% names(newdata)) {
+      newdata[[f]] = factor(newdata[[f]], levels = levels(ref_data[[f]]))
+    }
+  }
+
+  # -------------------------------
+  # 3. Simulate predictions
+  # -------------------------------
+  beta_hat = fixef(model)$cond
+  V_beta   = vcov(model)$cond
+  X = model.matrix(
+    ~ SEASON + SST_scaled + wind_scaled + wave_scaled + tide_scaled +
+      lunar_sin + lunar_cos + MWD_sin + MWD_cos + WDIR_sin + WDIR_cos,
+    data = newdata
+  )
+  beta_sim = mvtnorm::rmvnorm(1000, mean = beta_hat, sigma = V_beta)
+  intercept_sim = beta_sim[, "(Intercept)"]
+  beta_sim_sub = beta_sim[, colnames(X)]
+  eta_sim = X %*% t(beta_sim_sub)
+  eta_sim = sweep(eta_sim, 2, intercept_sim, "+")
+  if("SEASONWet" %in% colnames(beta_sim)) eta_sim = sweep(eta_sim, 2, beta_sim[, "SEASONWet"], "+")
+  mu_sim = plogis(eta_sim)
+
+  newdata$fit   = apply(mu_sim, 1, mean)
+  newdata$lower = apply(mu_sim, 1, quantile, 0.025)
+  newdata$upper = apply(mu_sim, 1, quantile, 0.975)
+  newdata$model = model_label
+  newdata$color_line = color_line
+  newdata$linetype_line = linetype_line
+
+  # -------------------------------
+  # 4. Back-transform to original scale
+  # -------------------------------
+  if(predictor %in% names(scaling)) {
+    newdata[[paste0(predictor, "_orig")]] = 
+      newdata[[predictor]] * scaling[[predictor]]$sd + scaling[[predictor]]$mean
+  } else {
+    newdata[[paste0(predictor, "_orig")]] = newdata[[predictor]]
+  }
+
+  # -------------------------------
+  # 5. Overlay observed values if metadata provided
+  # -------------------------------
+  obs_data = NULL
+if(!is.null(metadata) & predictor %in% names(scaling)) {
+  obs_var = scaling[[predictor]]$orig
+  obs_data = metadata %>%
+    select(all_of(obs_var)) %>%
+    setNames("obs_value")   # = fixed
+}
+
+  return(list(predictions = newdata, observed = obs_data))
+}
+
+# -------------------------------
+# 6. Example usage for two models
+# -------------------------------
+pred_linear_rich = predict_linear_unscaled(model_beta, predictor,
+                                            "Detected richness",
+                                            ref_data = alpha.mod,
+                                            metadata = metadata,
+                                            color_line = "black",
+                                            linetype_line = "dashed")
+
+pred_linear_edna = predict_linear_unscaled(model_beta_reads, predictor,
+                                            "eDNA index",
+                                            ref_data = phylum_counts,
+                                            metadata = metadata,
+                                            color_line = "black",
+                                            linetype_line = "solid")
+
+pred_all_linear = bind_rows(pred_linear_rich$predictions,
+                             pred_linear_edna$predictions)
+
+# -------------------------------
+# 7. Plot both models with observed overlay
+# -------------------------------
+sstplot=ggplot() +
+   # Overlay histogram of observed values 
+  {if(!is.null(pred_linear_rich$observed)) { geom_histogram(
+  data = pred_linear_rich$observed,
+  aes(
+    x = obs_value,
+    y = after_stat(count / max(count))
+  ),
+  bins = 20,
+  fill = "tan",
+  alpha = 0.5
+) }} +
+  # Predicted response ribbons and lines
+  # eDNA index
+  geom_ribbon(
+    data = subset(pred_all_linear, model=="eDNA index"),
+    aes(x = get(paste0(predictor, "_orig")), ymin = lower, ymax = upper),
+    fill = "black", alpha = 0.1
+  ) +
+  geom_line(
+    data = subset(pred_all_linear, model=="eDNA index"),
+    aes(x = get(paste0(predictor, "_orig")), y = fit),
+    colour = "black",
+    size = 1, linetype="solid"
+  ) +
+   # Detected richness
+  geom_ribbon(
+    data = subset(pred_all_linear, model=="Detected richness"),
+    aes(x = get(paste0(predictor, "_orig")), ymin = lower, ymax = upper),
+    fill = "#1985a1", alpha = 0.1
+  ) +
+  geom_line(
+    data = subset(pred_all_linear, model=="Detected richness"),
+    aes(x = get(paste0(predictor, "_orig")), y = fit),
+    colour = "#1985a1",
+    size = 1.2, linetype="dashed"
+  ) +
+  # Axis labels
+  scale_y_continuous(
+    name = "",          # left axis
+    limits = c(0,1),
+    sec.axis = sec_axis(~ ., name = "")  # right axis
+  ) +
+  labs(title="G", x = scaling[[predictor]]$orig) +
+  My_Theme + theme(
+    axis.ticks = element_blank(),   # remove tick marks
+    axis.text.y = element_blank(),  # remove y-axis text
+    axis.text.x = element_text()    # keep x-axis text if needed
+  )
+sstplot
+
+ggsave(
+  filename = file.path(paths$results_figs, "FIGURE_4G.pdf"),
+  plot     = sstplot,
+  width    = 4,
+  height   = 4,
+  units    = "in",
+  device   = cairo_pdf,
+  family   = "Arial"
+)
+```
+
+##### Wave height
+
+```{r}
+predictor = "wave_scaled"   # options: "SST_scaled", "wind_scaled", "wave_scaled", "tide_scaled"
+
+
+pred_linear_rich = predict_linear_unscaled(model_beta, predictor,
+                                            "Detected richness",
+                                            ref_data = alpha.mod,
+                                            metadata = metadata,
+                                            color_line = "black",
+                                            linetype_line = "dashed")
+
+pred_linear_edna = predict_linear_unscaled(model_beta_reads, predictor,
+                                            "eDNA index",
+                                            ref_data = phylum_counts,
+                                            metadata = metadata,
+                                            color_line = "black",
+                                            linetype_line = "solid")
+
+pred_all_linear = bind_rows(pred_linear_rich$predictions,
+                             pred_linear_edna$predictions)
+
+# -------------------------------
+# 7. Plot both models with observed overlay
+# -------------------------------
+waveplot=ggplot() +
+  # Overlay histogram of observed values
+  {if(!is.null(pred_linear_rich$observed)) {
+    geom_histogram(
+  data = pred_linear_rich$observed,
+  aes(
+    x = obs_value,
+    y = after_stat(count / max(count))
+  ),
+  bins = 20,
+  fill = "tan",
+  alpha = 0.5
+)
+  }} +
+  # Predicted response ribbons and lines
+  # Detected richness
+  geom_ribbon(
+    data = subset(pred_all_linear, model=="Detected richness"),
+    aes(x = get(paste0(predictor, "_orig")), ymin = lower, ymax = upper),
+    fill = "black", alpha = 0.1
+  ) +
+  geom_line(
+    data = subset(pred_all_linear, model=="Detected richness"),
+    aes(x = get(paste0(predictor, "_orig")), y = fit),
+    colour = "black",
+    size = 1, linetype="dashed"
+  ) +
+  # eDNA index
+  geom_ribbon(
+    data = subset(pred_all_linear, model=="eDNA index"),
+    aes(x = get(paste0(predictor, "_orig")), ymin = lower, ymax = upper),
+    fill = "#1985a1", alpha = 0.1
+  ) +
+  geom_line(
+    data = subset(pred_all_linear, model=="eDNA index"),
+    aes(x = get(paste0(predictor, "_orig")), y = fit),
+    colour = "#1985a1",
+    size = 1.2, linetype="solid"
+  ) +
+  # Axis labels
+  scale_y_continuous(
+    name = "",          # left axis
+    limits = c(0,1),
+    sec.axis = sec_axis(~ ., name = "")  # right axis
+  ) +
+  labs(title="C", x = scaling[[predictor]]$orig) +
+  My_Theme + theme(
+    axis.ticks = element_blank(),   # remove tick marks
+    axis.text.y = element_blank(),  # remove y-axis text
+    axis.text.x = element_text()    # keep x-axis text if needed
+  )
+waveplot
+
+ggsave(
+  filename = file.path(paths$results_figs, "FIGURE_4C.pdf"),
+  plot     = waveplot,
+  width    = 4,
+  height   = 4,
+  units    = "in",
+  device   = cairo_pdf,
+  family   = "Arial"
+)
+```
+
+
+##### Tide height
+
+```{r}
+predictor = "tide_scaled"   # options: "SST_scaled", "wind_scaled", "wave_scaled", "tide_scaled"
+
+
+pred_linear_rich = predict_linear_unscaled(model_beta, predictor,
+                                            "Detected richness",
+                                            ref_data = alpha.mod,
+                                            metadata = metadata,
+                                            color_line = "black",
+                                            linetype_line = "dashed")
+
+pred_linear_edna = predict_linear_unscaled(model_beta_reads, predictor,
+                                            "eDNA index",
+                                            ref_data = phylum_counts,
+                                            metadata = metadata,
+                                            color_line = "black",
+                                            linetype_line = "solid")
+
+pred_all_linear = bind_rows(pred_linear_rich$predictions,
+                             pred_linear_edna$predictions)
+
+# -------------------------------
+# 7. Plot both models with observed overlay
+# -------------------------------
+tideplot=ggplot() +
+  # Overlay histogram of observed values
+  {if(!is.null(pred_linear_rich$observed)) {
+    geom_histogram(
+  data = pred_linear_rich$observed,
+  aes(
+    x = obs_value,
+    y = after_stat(count / max(count))
+  ),
+  bins = 20,
+  fill = "tan",
+  alpha = 0.5
+)
+  }} +
+  # Predicted response ribbons and lines
+  # Detected richness
+  geom_ribbon(
+    data = subset(pred_all_linear, model=="Detected richness"),
+    aes(x = get(paste0(predictor, "_orig")), ymin = lower, ymax = upper),
+    fill = "black", alpha = 0.1
+  ) +
+  geom_line(
+    data = subset(pred_all_linear, model=="Detected richness"),
+    aes(x = get(paste0(predictor, "_orig")), y = fit),
+    colour = "black",
+    size = 1, linetype="dashed"
+  ) +
+  # eDNA index
+  geom_ribbon(
+    data = subset(pred_all_linear, model=="eDNA index"),
+    aes(x = get(paste0(predictor, "_orig")), ymin = lower, ymax = upper),
+    fill = "#1985a1", alpha = 0.1
+  ) +
+  geom_line(
+    data = subset(pred_all_linear, model=="eDNA index"),
+    aes(x = get(paste0(predictor, "_orig")), y = fit),
+    colour = "#1985a1",
+    size = 1.2, linetype="solid"
+  ) +
+  # Axis labels
+  scale_y_continuous(
+    name = "Predicted response",          # left axis
+    limits = c(0,1),
+    sec.axis = sec_axis(~ ., name = "")  # right axis
+  ) +
+  labs(title="E",x = scaling[[predictor]]$orig) +
+  My_Theme 
+tideplot
+
+ggsave(
+  filename = file.path(paths$results_figs, "FIGURE_4E.pdf"),
+  plot     = tideplot,
+  width    = 4,
+  height   = 4,
+  units    = "in",
+  device   = cairo_pdf,
+  family   = "Arial"
+)
+```
+
+##### Wind speed
+
+```{r}
+predictor = "wind_scaled"   # options: "SST_scaled", "wind_scaled", "wave_scaled", "tide_scaled"
+
+
+pred_linear_rich = predict_linear_unscaled(model_beta, predictor,
+                                            "Detected richness",
+                                            ref_data = alpha.mod,
+                                            metadata = metadata,
+                                            color_line = "black",
+                                            linetype_line = "dashed")
+
+pred_linear_edna = predict_linear_unscaled(model_beta_reads, predictor,
+                                            "eDNA index",
+                                            ref_data = phylum_counts,
+                                            metadata = metadata,
+                                            color_line = "black",
+                                            linetype_line = "solid")
+
+pred_all_linear = bind_rows(pred_linear_rich$predictions,
+                             pred_linear_edna$predictions)
+
+# -------------------------------
+# 7. Plot both models with observed overlay
+# -------------------------------
+windplot=ggplot() +
+  # Overlay histogram of observed values
+  {if(!is.null(pred_linear_rich$observed)) {
+    geom_histogram(
+  data = pred_linear_rich$observed,
+  aes(
+    x = obs_value,
+    y = after_stat(count / max(count))
+  ),
+  bins = 20,
+  fill = "tan",
+  alpha = 0.5
+)
+  }} +
+  # Predicted response ribbons and lines
+  # Detected richness
+  geom_ribbon(
+    data = subset(pred_all_linear, model=="Detected richness"),
+    aes(x = get(paste0(predictor, "_orig")), ymin = lower, ymax = upper),
+    fill = "black", alpha = 0.1
+  ) +
+  geom_line(
+    data = subset(pred_all_linear, model=="Detected richness"),
+    aes(x = get(paste0(predictor, "_orig")), y = fit),
+    colour = "black",
+    size = 1, linetype="dashed"
+  ) +
+  # eDNA index
+  geom_ribbon(
+    data = subset(pred_all_linear, model=="eDNA index"),
+    aes(x = get(paste0(predictor, "_orig")), ymin = lower, ymax = upper),
+    fill = "black", alpha = 0.1
+  ) +
+  geom_line(
+    data = subset(pred_all_linear, model=="eDNA index"),
+    aes(x = get(paste0(predictor, "_orig")), y = fit),
+    colour = "black",
+    size = 1, linetype="solid"
+  ) +
+  # Axis labels
+  scale_y_continuous(
+    name = "Predicted response",          # left axis
+    limits = c(0,1),
+    sec.axis = sec_axis(~ ., name = "")  # right axis
+  ) +
+  labs(title="A", x = scaling[[predictor]]$orig) +
+  My_Theme 
+windplot
+
+ggsave(
+  filename = file.path(paths$results_figs, "FIGURE_4A.pdf"),
+  plot     = windplot,
+  width    = 4,
+  height   = 4,
+  units    = "in",
+  device   = cairo_pdf,
+  family   = "Arial"
+)
+```
+
+
+####c. Categorical predictor
+
+##### Season
+
+```{r}
+# -------------------------------
+# 1. Set predictor to SEASON
+# -------------------------------
+predictor = "SEASON"
+
+predict_categorical = function(model, predictor, model_label,
+                                ref_data, metadata = NULL,
+                                color_line = "black", linetype_line = "solid") {
+
+  # Get factor levels of the predictor
+  pred_levels = levels(ref_data[[predictor]])
+
+  # Create newdata template
+  newdata = data.frame(
+    SST_scaled  = 0,
+    wind_scaled = 0,
+    wave_scaled = 0,
+    tide_scaled = 0,
+    lunar_sin = 0, lunar_cos = 1,
+    MWD_sin = 0, MWD_cos = 1,
+    WDIR_sin = 0, WDIR_cos = 1,
+    SEASON = factor(pred_levels[1], levels = pred_levels),
+    SITE = NA,
+    MARKER = NA
+  )
+  newdata = newdata[rep(1, length(pred_levels)), ]
+  newdata[[predictor]] = factor(pred_levels, levels = pred_levels)
+
+  # Ensure other factor variables match
+  factor_vars = names(ref_data)[sapply(ref_data, is.factor)]
+  for(f in factor_vars) {
+    if(f %in% names(newdata)) {
+      newdata[[f]] = factor(newdata[[f]], levels = levels(ref_data[[f]]))
+    }
+  }
+
+  # -------------------------------
+  # 3. Simulate predictions (same as before)
+  # -------------------------------
+  beta_hat = fixef(model)$cond
+  V_beta   = vcov(model)$cond
+  X = model.matrix(
+    ~ SEASON + SST_scaled + wind_scaled + wave_scaled + tide_scaled +
+      lunar_sin + lunar_cos + MWD_sin + MWD_cos + WDIR_sin + WDIR_cos,
+    data = newdata
+  )
+  beta_sim = mvtnorm::rmvnorm(1000, mean = beta_hat, sigma = V_beta)
+  intercept_sim = beta_sim[, "(Intercept)"]
+  beta_sim_sub = beta_sim[, colnames(X)]
+  eta_sim = X %*% t(beta_sim_sub)
+  eta_sim = sweep(eta_sim, 2, intercept_sim, "+")
+  # handle SEASONWet if present
+  if("SEASONWet" %in% colnames(beta_sim)) eta_sim = sweep(eta_sim, 2, beta_sim[, "SEASONWet"], "+")
+  mu_sim = plogis(eta_sim)
+
+  newdata$fit   = apply(mu_sim, 1, mean)
+  newdata$lower = apply(mu_sim, 1, quantile, 0.025)
+  newdata$upper = apply(mu_sim, 1, quantile, 0.975)
+  newdata$model = model_label
+  newdata$color_line = color_line
+  newdata$linetype_line = linetype_line
+
+  return(newdata)
+}
+
+# -------------------------------
+# 2. Predict values for SEASON
+# -------------------------------
+pred_season_rich = predict_categorical(model_beta, "SEASON", "Detected richness", alpha.mod)
+pred_season_edna = predict_categorical(model_beta_reads, "SEASON", "eDNA index", phylum_counts)
+
+pred_all_season = bind_rows(pred_season_rich, pred_season_edna)
+# Create a numeric dummy to use for x-axis in the same style as continuous predictors
+pred_all_season$SEASON_orig = as.numeric(pred_all_season$SEASON)
+
+# -------------------------------
+# 3. Plot predicted response with points and error bars
+# -------------------------------
+seasonplot = ggplot(pred_all_season) +
+  geom_point(aes(x = get(paste0(predictor, "_orig")), y = fit, shape = model, color = model),
+             position = position_dodge(width = 0.5), size = 3) +
+  geom_errorbar(aes(x = get(paste0(predictor, "_orig")), ymin = lower, ymax = upper, linetype = model),
+                position = position_dodge(width = 0.5), width = 0.00001, size = 1) +
+  scale_y_continuous(name = "", limits = c(0,1)) +
+  scale_x_continuous(breaks = 1:length(levels(pred_all_season$SEASON)),
+                     labels = levels(pred_all_season$SEASON)) +
+  scale_shape_manual(values = c("Detected richness" = 16, "eDNA index" = 17)) +
+  scale_linetype_manual(values = c("Detected richness" = "dashed",
+                                   "eDNA index" = "solid")) +
+  scale_color_manual(values = c("Detected richness" = "black",
+                                "eDNA index" = "black")) +
+  labs(title="H", x = "") +
+  My_Theme + theme(legend.position = "none") + theme(
+    axis.ticks = element_blank(),   # remove tick marks
+    axis.text.y = element_blank(),  # remove y-axis text
+    axis.text.x = element_text()    # keep x-axis text if needed
+  )
+
+seasonplot
+
+ggsave(
+  filename = file.path(paths$results_figs, "FIGURE_4H.pdf"),
+  plot     = seasonplot,
+  width    = 3,
+  height   = 4,
+  units    = "in",
+  device   = cairo_pdf,
+  family   = "Arial"
+)
+```
+
+### iv. Dominant Phyla
+
+#### a. RF Classification
+
+```{r}
+phylum_counts_pa = phylum_counts_clean %>%
+  mutate(present = ifelse(abundance > 0, "Present", "Absent"))
+
+## Dominant Phyla
+dominant_phylum = phylum_counts_pa %>%
+  group_by(SAMPLE) %>%
+  slice_max(abundance, n = 1) %>%
+  ungroup()
+
+####set.seed(42) ####################################################################################
+#rf_perm_phyla = rfPermute(as.factor(phylum) ~ SST_scaled + wave_scaled + tide_scaled + wind_scaled + MWD_sin + MWD_cos + WDIR_sin + WDIR_cos + lunar_sin + lunar_cos + SEASON + MARKER+ SITE, data = dominant_phylum, ntree = 500, importance = TRUE, sampsize = rep(min(table(dominant_phylum$phylum)), length(unique(dominant_phylum$phylum))), num.rep = numperm, num.cores=cores_to_use)
+#saveRDS(rf_perm_phyla, file.path(paths$results_rds,"RFmodel_phyla.rds"))
+##################################################################################################
+rf_perm_phyla=readRDS(file.path(paths$results_rds,"RFmodel_phyla.rds"))
+
+rf_perm_phyla
+plotImportance(rf_perm_phyla)
+
+oob.error=as.data.frame(rf_perm_phyla$rf$confusion)
+oob.error$accuracy=1-oob.error$class.error
+oob.error$mean_err=mean(rf_perm_phyla$rf$confusion[,6])#OOB Accuracy
+oob.error$mean_accur=1-mean(rf_perm_phyla$rf$confusion[,6]) #OOB Accuracy
+write.csv(oob.error, file.path(paths$results_tables, "TABLE_S8_RFclassification_error.csv"), row.names = FALSE)
+```
+
+
+##F. Figure 6
+
+### i. Prepare eDNA index timeseries data
+
+```{r}
+data.long.top5 = subset(data.long.top5, YEAR != "2023")
+data.long.top5 = subset(data.long.top5, STEP != "1")
+data.long.top5$DATE = as.Date(data.long.top5$DATE, format = "%d/%m/%Y")
+
+Modelplot.step.prop = data.long.top5 %>%
+  group_by(STEP, DATE, SITE, MARKER, phylum) %>%
+  summarise(
+    index = sum(abundance, na.rm = TRUE),
+    sd = sd(abundance, na.rm = TRUE),
+    se = sd / sqrt(n()),
+    .groups = "drop"
+  ) %>%
+  group_by(SITE, MARKER, STEP) %>%
+  mutate(total_value = sum(index, na.rm = TRUE)) %>%
+  ungroup() %>%
+  mutate(
+    prop = index / total_value,
+    DATE = as.Date(DATE, format = "%d/%m/%Y")
+  ) %>%
+  arrange(SITE, phylum, STEP, MARKER)
+
+Modelplot.step.index = data.long.top5 %>%
+  group_by(SITE, phylum, STEP, DATE, MARKER) %>%
+  summarise(
+    index = sum(abundance, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    STEP = as.numeric(STEP),
+    DATE = as.Date(DATE, format = "%d/%m/%Y")
+  )
+
+final_index = Modelplot.step.index %>%
+  select(SITE, phylum, STEP, MARKER, index) %>%
+  pivot_wider(
+    names_from = MARKER,
+    values_from = index
+  ) %>%
+  filter(!is.na(`18S`), !is.na(COI)) %>%
+  arrange(SITE, phylum, STEP) %>%
+  distinct(SITE, phylum, STEP, .keep_all = TRUE)
+
+```
+
+### ii. Calculate concordance
+
+```{r}
+# Compute Kendall W for paired observations among SITE x Phylum x Marker combinations
+library(synchrony)
+set.seed(123)
+sync_results = final_index %>%
+  group_by(SITE, phylum) %>%
+  summarise(
+    n_steps = n(),
+    ts = list(
+      as.matrix(pick(`18S`, COI)[order(STEP), ])
+    ),
+    .groups = "drop"
+  ) %>%
+  filter(n_steps >= 6) %>%
+  rowwise() %>%
+  mutate(
+    sync_res = list(
+      kendall.w(
+        data   = ts,
+        nrands = numperm,
+        type   = 1,   # or 2
+        quiet  = FALSE
+      )
+    ),
+    W       = sync_res$w.corrected,
+    rho     = sync_res$spearman.corr,
+    p_value = sync_res$pval.rand
+  ) %>%
+  ungroup() %>%
+  select(SITE, phylum, n_steps, W, rho, p_value)
+
+
+annot_data = sync_results %>%
+  left_join(
+    Modelplot.step.prop %>% distinct(SITE, phylum, DATE),
+    by = c("SITE", "phylum")
+  ) %>%
+  mutate(
+    sync_xpos = min(DATE) - 5,
+    r_xpos    = min(DATE) + 225,
+    p_xpos    = min(DATE) + 460,
+    sync_ypos = 0.95,
+    y_pos_r   = 0.95,
+    y_pos_p   = 0.95
+  ) %>%
+  distinct(SITE, phylum, .keep_all = TRUE)
+```
+
+### iii. Plot
+
+```{r}
+fig6=ggplot(Modelplot.step.prop, aes(x = DATE, y = prop, group = interaction(SITE, MARKER), color = MARKER)) + 
+  geom_vline(xintercept = as.Date(c("2019-09-19", "2019-11-27", "2020-09-22", "2020-11-30")), 
+             linetype = "dashed", color = "grey70", size = 0.7, alpha = 0.6) +
+  geom_line() +
+  geom_point(size = 1) +
+  geom_errorbar(aes(ymin = prop - se, ymax = prop + se), width = 0.2) +
+  xlab("") +
+  ylab("Relative eDNA Contribution") + 
+  #scale_y_sqrt(limits = c(0, 1)) +
+  ylim(0,1)+
+  facet_grid(SITE ~ phylum, scales = "fixed") + 
+  scale_color_manual(values = cols.marker) + 
+  scale_x_date(
+  breaks = "4 months",
+  labels = scales::date_format("%m/%y"),
+  expand = c(.1, .1)
+) + 
+  My_Theme +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5),
+    axis.text.y = element_text(size = 10),
+    panel.spacing = unit(1, "lines"), 
+    legend.position = "right"
+  ) +
+  # Add Kendall's W annotation (top-left, slightly below max)
+  geom_text(
+    aes(
+      x = sync_xpos, y = sync_ypos,  
+      label = paste0("W= ", formatC(W, format = "f", digits = 2)),
+      fontface = ifelse(p_value < 0.05, "bold", "plain")  # Bold if p-value is significant
+    ),
+    data = annot_data,
+    inherit.aes = FALSE,
+    size = 3.2,
+    hjust = 0  # Align left
+  ) +
+  geom_text(aes(x = r_xpos, y = y_pos_r,label = paste0("\u03C1= ", formatC(rho, format = "f", digits = 2)), fontface = ifelse(p_value < 0.05, "bold", "plain")),data = annot_data,inherit.aes = FALSE,size = 3.2, hjust = 0) +
+  # Add p-value annotation
+  geom_text(
+    aes(
+      x = p_xpos, y = y_pos_p, 
+      label = ifelse(p_value < 0.01, "p < 0.01", paste0("p = ", formatC(p_value, format = "f", digits = 2))),
+      fontface = ifelse(p_value < 0.05, "bold", "plain")  # Bold if p-value is significant
+    ),
+    data = annot_data,
+    inherit.aes = FALSE,
+    size = 3.2,
+    hjust = 0  # Align left
+  ) + theme(legend.position = "none")
+fig6
+```
+
+###iv. Export
+
+```{r}
+ggsave(
+  filename = file.path(paths$results_figs, "FIGURE_6.pdf"),
+  plot     = fig6,
+  width    = 11,
+  height   = 6,
+  units    = "in",
+  device   = cairo_pdf,
+  family   = "Arial"
+)
+```
+
