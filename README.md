@@ -1,5 +1,7 @@
 # Metabarcoding sequence data and analyses for O'ahu timeseries study
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18400808.svg)](https://doi.org/10.5281/zenodo.18400807)
+
 Nichols PK & Marko PB (_in prep._). *Spatial complexity, not temporal noise, structures eDNA community profiles on coral reefs.*
 
 This repository contains VSEARCH command line codes and R scripts for the analysis of environmental DNA (eDNA) metabarcoding sequence data.
