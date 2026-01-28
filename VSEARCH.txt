@@ -1,0 +1,73 @@
+# VSEARCH Workflow - 18S and COI
+# ===============================
+# This file contains the commands used for processing metabarcoding sequence data
+# for both 18S and COI datasets. Only successfully completed steps are included.
+
+### 18S Processing
+
+# 1. Dereplicate full-length sequences
+vsearch --derep_fulllength data_18S.fasta \
+        --output alldata_derep.fasta \
+        --sizeout \
+        --minseqlength 30 \
+        --minuniquesize 2
+
+# 2. Detect chimeras de novo
+vsearch --uchime_denovo alldata_derep.fasta \
+        --nonchimeras alldata_nochimeras.fasta
+
+# 3. Sort by abundance and remove singletons
+vsearch --sortbysize alldata_nochimeras.fasta \
+        --output data_sorted.fasta \
+        --minsize 2
+
+# 4. Cluster at 99% identity
+vsearch --cluster_size data_sorted.fasta \
+        --id 0.99 \
+        --consout data_rep_set_18S.fasta \
+        --relabel MOTU \
+        --centroids data_centroids.fasta \
+        --threads 15
+
+# 5. Map original sequences to representative OTUs
+vsearch --usearch_global data_18S.fasta \
+        --db data_centroids_18S.fasta \
+        --strand both \
+        --id 0.99 \
+        --otutabout dataOTU_18S.txt \
+        --threads 15
+
+
+### COI Processing
+
+# 1. Dereplicate full-length sequences
+vsearch --derep_fulllength data_COI.fasta \
+        --output alldata_derep.fasta \
+        --sizeout \
+        --minseqlength 30 \
+        --minuniquesize 2
+
+# 2. Detect chimeras de novo
+vsearch --uchime_denovo alldata_derep.fasta \
+        --nonchimeras alldata_nochimeras.fasta
+
+# 3. Sort by abundance and remove singletons
+vsearch --sortbysize alldata_nochimeras.fasta \
+        --output data_sorted.fasta \
+        --minsize 2
+
+# 4. Cluster at 99% identity
+vsearch --cluster_size data_sorted.fasta \
+        --id 0.99 \
+        --consout data_rep_set_COI.fasta \
+        --relabel MOTU \
+        --centroids data_centroids_COI.fasta \
+        --threads 15
+
+# 5. Map original sequences to representative OTUs
+vsearch --usearch_global data_COI.fasta \
+        --db data_centroids_COI.fasta \
+        --strand both \
+        --id 0.99 \
+        --otutabout dataOTU_COI.txt \
+        --threads 15
