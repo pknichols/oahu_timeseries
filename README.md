@@ -8,24 +8,39 @@ The dataset includes the following files:
 
 ## 1. VSEARCH commands
 
-1. **[VSEARCH.txt](./VSEARCH.txt)**
+#### A. **[VSEARCH.txt](./VSEARCH.txt)**
    *VSEARCH command lines for processing of DNA sequences*
-   
+
+
+Step | Input                                   | Output                                         | Description
+-----|----------------------------------------|-----------------------------------------------|-------------------------------------------------------------
+1    | data_18S.fasta                          | alldata_derep.fasta                           | Dereplicate full-length 18S sequences, remove sequences <30bp or with <2 copies
+2    | alldata_derep.fasta                      | alldata_nochimeras.fasta                      | Detect and remove chimeras using de novo uchime_denovo
+3    | alldata_nochimeras.fasta                 | data_sorted.fasta                             | Sort sequences by abundance and remove singletons (minsize 2)
+4    | data_sorted.fasta                        | data_rep_set_18S.fasta, data_centroids.fasta | Cluster sequences at 99% identity to generate representative OTUs
+5    | data_18S.fasta + data_centroids_18S.fasta | dataOTU_18S.txt                              | Map original sequences to representative OTUs to produce final OTU table
+6    | data_COI.fasta                           | alldata_derep.fasta                           | Dereplicate full-length COI sequences, remove sequences <30bp or <2 copies
+7    | alldata_derep.fasta                      | alldata_nochimeras.fasta                      | Detect and remove chimeras (de novo)
+8    | alldata_nochimeras.fasta                 | data_sorted.fasta                             | Sort sequences by abundance and remove singletons (minsize 2)
+9    | data_sorted.fasta                        | data_rep_set_COI.fasta, data_centroids_COI.fasta | Cluster sequences at 99% identity to generate representative OTUs
+10   | data_COI.fasta + data_centroids_COI.fasta | dataOTU_COI.txt                              | Map original sequences to representative OTUs to produce final OTU table
+
+
 ## 2. Workflow Steps
 
-1. **[1_Preprocessing18S.Rmd](./1_Preprocessing18S.Rmd)**
+#### A. **[1_Preprocessing18S.Rmd](./1_Preprocessing18S.Rmd)**
    *INSECT taxonomy classification and decontamination of 18S data.*
 
-2. **[2_18S.Rmd](./2_18S.Rmd)**
+#### B. **[2_18S.Rmd](./2_18S.Rmd)**
    *Taxon filtering, read normalization, community and statistical analyses for 18S dataset.*
 
-3. **[3_PreprocessingCOI.Rmd](./3_PreprocessingCOI.Rmd)**
+#### C. **[3_PreprocessingCOI.Rmd](./3_PreprocessingCOI.Rmd)**
    *INSECT taxonomy classification and decontamination of COI data.*
 
-4. **[4_COI.Rmd](./4_COI.Rmd)**
+#### D. **[4_COI.Rmd](./4_COI.Rmd)**
    *Taxon filtering, read normalization, community and statistical analyses for COI dataset.*
 
-5. **[5_CombinedAnalyses.Rmd](./5_CombinedAnalyses.Rmd)**
+#### E. **[5_CombinedAnalyses.Rmd](./5_CombinedAnalyses.Rmd)**
    *Producing figures and combined analyses on outputs from both 18S and COI datasets.*
 
 
