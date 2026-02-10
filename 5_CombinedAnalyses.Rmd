@@ -273,8 +273,8 @@ ggsave(
 
 ```{r}
 ## Marker Decay
-zeta.str.decay.18S=read.csv(file.path(paths$results_tables, "zeta_decay_marker18S.csv"), header = T)
-zeta.str.decay.COI=read.csv(file.path(paths$results_tables, "zeta_decay_markerCOI.csv"), header = T)
+zeta.str.decay.18S=read.csv(file.path(paths$results_tables, "zeta_decay_scaled_marker18S.csv"), header = T)
+zeta.str.decay.COI=read.csv(file.path(paths$results_tables, "zeta_decay_scaled_markerCOI.csv"), header = T)
 zeta.str.decay=rbind(zeta.str.decay.18S, zeta.str.decay.COI)
 
 ## Marker Ratio
@@ -329,8 +329,9 @@ zeta.markerplot=zeta.str %>%
   scale_color_manual(values = cols.marker) + # Custom colors for MARKER
   scale_fill_manual(values = cols.marker) +  # Ribbon fill colors based on MARKER
   ylab("Proportion") +
-  xlab("") + facet_wrap(~variable) +
-  My_Theme + theme(legend.position = "right") + xlim(0,16)+ ylim(0,1)+scale_y_log10()
+  xlab("") + facet_wrap(~variable, scales="free_y") +
+  My_Theme + theme(legend.position = "right") + xlim(0,16)+scale_y_log10() + ylim(0,1)
+zeta.markerplot
 ```
 
 
