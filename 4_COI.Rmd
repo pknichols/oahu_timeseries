@@ -289,17 +289,17 @@ otu_coverage=otu_coverage[rowSums(otu_coverage) > 0, ]
 ## ---- transformations ----
 
 # Hellinger
-otu_hellinger=decostand(t(otu_coverage), method="hellinger")
+otu_hellinger=decostand(t(otu_reads), method="hellinger")
 otu_hellinger=t(otu_hellinger)
 
 #write_csv(as.data.frame(otu_hellinger) %>% rownames_to_column("OTU_ID"), file.path(paths$results_tables, "OTU_hellinger_COI.csv"))
 
 # Presence–absence
-otu_pa=decostand(t(otu_coverage), method="pa")
+otu_pa=decostand(t(otu_reads), method="pa")
 otu_pa=t(otu_pa)
 
 # eDNA index
-relative_abundance=sweep(otu_coverage, 2, colSums(otu_coverage), "/")
+relative_abundance=sweep(otu_reads, 2, colSums(otu_reads), "/")
 max_relative_abundance=apply(relative_abundance, 1, max, na.rm=TRUE)
 otu_index=sweep(relative_abundance, 1, max_relative_abundance, "/")
 otu_index[is.na(otu_index)]=0
@@ -382,10 +382,9 @@ dist_matrix=vegdist(
   method=distance_method
 )
 
-## ---- NMDS ----
-#####################################################################
-#nmds=metaMDS(community_matrix, k=3, trymax=500, trace=T, weakties=TRUE, maxit=numperm, pc=TRUE, zerodist="add")
-#saveRDS(nmds, file.path(paths$results_rds, "nmds_COI.rds"))
+## NMDS #####################################################################
+nmds=metaMDS(community_matrix, k=3, trymax=500, trace=T, weakties=TRUE, maxit=numperm, pc=TRUE, zerodist="add")
+saveRDS(nmds, file.path(paths$results_rds, "nmds_COI.rds"))
 #####################################################################
 nmds=readRDS(file.path(paths$results_rds, "nmds_COI.rds"))
 
@@ -609,8 +608,8 @@ com.waimanalo=com.d.waimanalo[,1:ncom]
 
 ####KANEOHE####
 ########################################################################
-#sync.kaneohe=community.sync(com.kaneohe, type = 1, nrands = numperm, method = "spearman") # shuffle each column
-#saveRDS(sync.kaneohe, file.path(paths$results_rds, "sync_kaneohe_COI.rds"))
+sync.kaneohe=community.sync(com.kaneohe, type = 1, nrands = numperm, method = "spearman") # shuffle each column
+saveRDS(sync.kaneohe, file.path(paths$results_rds, "sync_kaneohe_COI.rds"))
 ########################################################################
 sync.kaneohe=readRDS(file.path(paths$results_rds, "sync_kaneohe_COI.rds"))
 k.sync=as.data.frame(sync.kaneohe$obs)
@@ -620,8 +619,8 @@ k.sync$site="Kāneʻohe"
 
 ####LANIKAI####
 #######################################################################
-#sync.lanikai=community.sync(com.lanikai, type = 1, nrands = numperm, method = "spearman") # shuffle each column
-#saveRDS(sync.lanikai, file.path(paths$results_rds, "sync_lanikai_COI.rds"))
+sync.lanikai=community.sync(com.lanikai, type = 1, nrands = numperm, method = "spearman") # shuffle each column
+saveRDS(sync.lanikai, file.path(paths$results_rds, "sync_lanikai_COI.rds"))
 #######################################################################
 sync.lanikai=readRDS(file.path(paths$results_rds, "sync_lanikai_COI.rds"))
 l.sync=as.data.frame(sync.lanikai$obs)
@@ -631,8 +630,8 @@ l.sync$site="Lanikai"
 
 ####MAUNALUA####
 #######################################################
-#sync.maunalua=community.sync(com.maunalua, type = 1, nrands = numperm, method = "spearman") # shuffle each column
-#saveRDS(sync.maunalua, file.path(paths$results_rds, "sync_maunalua_COI.rds"))
+sync.maunalua=community.sync(com.maunalua, type = 1, nrands = numperm, method = "spearman") # shuffle each column
+saveRDS(sync.maunalua, file.path(paths$results_rds, "sync_maunalua_COI.rds"))
 ########################################################
 sync.maunalua=readRDS(file.path(paths$results_rds, "sync_maunalua_COI.rds"))
 m.sync=as.data.frame(sync.maunalua$obs)
@@ -642,8 +641,8 @@ m.sync$site="Maunalua"
 
 ####WAIMANALO####
 ######################################################
-#sync.waimanalo=community.sync(com.waimanalo, type = 1, nrands = numperm, method = "spearman")
-#saveRDS(sync.waimanalo, file.path(paths$results_rds, "sync_waimanalo_COI.rds"))
+sync.waimanalo=community.sync(com.waimanalo, type = 1, nrands = numperm, method = "spearman")
+saveRDS(sync.waimanalo, file.path(paths$results_rds, "sync_waimanalo_COI.rds"))
 ########################################################
 sync.waimanalo=readRDS(file.path(paths$results_rds, "sync_waimanalo_COI.rds"))
 w.sync=as.data.frame(sync.waimanalo$obs)
@@ -1076,8 +1075,8 @@ comm_filt[,1]=NULL
 ```{r}
 library(TITAN2)
 #### TITAN #######################################################
-#titan_result <- titan(env = env_time, txa = comm_filt, minSplt = 5, numPerm = numsam, boot = TRUE, ncpus = cores_to_use)
-#saveRDS(titan_result, file.path(paths$results_rds, "titan_COI.Rdata"))
+titan_result <- titan(env = env_time, txa = comm_filt, minSplt = 5, numPerm = numsam, boot = TRUE, ncpus = cores_to_use)
+saveRDS(titan_result, file.path(paths$results_rds, "titan_COI.Rdata"))
 ##################################################################
 titan_result=readRDS(file.path(paths$results_rds, "titan_COI.Rdata"))
 
