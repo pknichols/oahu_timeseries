@@ -1,4 +1,4 @@
-*Spatial complexity and rare-taxon turnover structures coral reef eDNA communities*
+# Spatial complexity and rare-taxon turnover structures coral reef eDNA communities #
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18400808.svg)](https://doi.org/10.5281/zenodo.18400807)
 
