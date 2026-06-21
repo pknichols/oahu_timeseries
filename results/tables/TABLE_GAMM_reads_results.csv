@@ -1,0 +1,17 @@
+"Type","Term","Estimate","Std_Error","Statistic","P_value","Significance","edf","Ref_df","Chi_sq"
+"Parametric","(Intercept)",-0.452,0.148,-3.04,"0.002","**",,,
+"Parametric","SEASONWet",-0.004,0.032,-0.14,"0.893","",,,
+"Parametric","MARKERCOI",0.155,0.016,9.54,"<0.001","***",,,
+"Smooth","s(SST_scaled)",2.9,3,59.97,"<0.001","***",2.9,3,59.97
+"Smooth","s(wind_scaled)",2.01,3,8.64,"0.024","*",2.01,3,8.64
+"Smooth","s(wave_scaled)",2.89,3,261.38,"<0.001","***",2.89,3,261.38
+"Smooth","s(tide_scaled)",0.34,3,0.58,"0.223","",0.34,3,0.58
+"Smooth","s(degrees)",0,2,0,"0.09",".",0,2,0
+"Smooth","s(MWD)",1.9,2,42.14,"<0.001","***",1.9,2,42.14
+"Smooth","s(WDIR)",1.8,2,90.33,"<0.001","***",1.8,2,90.33
+"Smooth","s(SITE)",2.98,3,482.84,"<0.001","***",2.98,3,482.84
+"Smooth","s(phylum)",3.96,4,428.61,"<0.001","***",3.96,4,428.61
+"Model Fit","R-squared",0.048,,,,,,,
+"Model Fit","Deviance_explained",0.326,,,,,,,
+"Model Fit","REML_score",-22948.4,,,,,,,
+"Model Fit","n",28433,,,,,,,
