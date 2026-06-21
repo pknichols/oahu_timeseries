@@ -52,8 +52,8 @@ library(patchwork)
 
 ## ---- reproducibility ----
 set.seed(123)
-available_cores = detectCores(logical = FALSE)  # physical cores
-cores_to_use = max(1, available_cores - 1)
+available_cores=detectCores(logical=FALSE)  # physical cores
+cores_to_use=max(1, available_cores - 1)
 
 numperm=9999
 
@@ -69,51 +69,51 @@ paths=list(
 walk(paths, dir.create, showWarnings=FALSE, recursive=TRUE)
 
 ## ---- plotting theme ----
-My_Theme = theme_set(theme_bw()+theme(
-  panel.grid.major = element_blank(), 
-  panel.grid.minor = element_blank(),
-  panel.background = element_blank(), 
-  panel.border = element_rect(fill=NA, colour = "black"), 
-  panel.spacing = unit(1, "lines"),
-  axis.title.x = element_text(size = 12, color="black"),
-  axis.text.x = element_text(size = 12, color="black"),
-  axis.title.y = element_text(size = 12, color = "black"),
-  axis.text.y = element_text(size=12, color = "black"),
-  legend.text = element_text(size=12, color = "black"),
-  strip.text.x = element_text(size=14, color="black"),
-  strip.text.y = element_text(size=14, color="black"),
-  strip.text = element_text(size = 14, color = "black"),
-  strip.background = element_blank(), 
-  strip.placement = "outside",
-  title = element_text(size=14, color="black", face="bold"),
-  axis.title = element_text(size=12, face="bold", colour = "black"), 
-  axis.ticks = element_blank(), 
-  axis.text = element_blank()))
+My_Theme=theme_set(theme_bw()+theme(
+  panel.grid.major=element_blank(), 
+  panel.grid.minor=element_blank(),
+  panel.background=element_blank(), 
+  panel.border=element_rect(fill=NA, colour="black"), 
+  panel.spacing=unit(1, "lines"),
+  axis.title.x=element_text(size=12, color="black"),
+  axis.text.x=element_text(size=12, color="black"),
+  axis.title.y=element_text(size=12, color="black"),
+  axis.text.y=element_text(size=12, color="black"),
+  legend.text=element_text(size=12, color="black"),
+  strip.text.x=element_text(size=14, color="black"),
+  strip.text.y=element_text(size=14, color="black"),
+  strip.text=element_text(size=14, color="black"),
+  strip.background=element_blank(), 
+  strip.placement="outside",
+  title=element_text(size=14, color="black", face="bold"),
+  axis.title=element_text(size=12, face="bold", colour="black"), 
+  axis.ticks=element_blank(), 
+  axis.text=element_blank()))
 
-My_Theme = theme_set(theme_bw()+theme(
-  panel.grid.major = element_blank(), 
-  panel.grid.minor = element_blank(),
-  panel.background = element_blank(), 
-  panel.border = element_rect(fill=NA, colour = "black"), 
-  panel.spacing = unit(1, "lines"),
-  axis.title.x = element_text(size = 12, color="black"),
-  axis.text.x = element_text(size = 12, color="black"),
-  axis.title.y = element_text(size = 12, color = "black"),
-  axis.text.y = element_text(size=12, color = "black"),
-  legend.text = element_text(size=12, color = "black"),
-  strip.text.x = element_text(size=14, color="black"),
-  strip.text.y = element_text(size=14, color="black"),
-  strip.text = element_text(size = 14, color = "black"),
-  strip.background = element_blank(), 
-  strip.placement = "outside",
-  title = element_text(size=14, color="black", face="bold"),
-  axis.title = element_text(size=12, face="bold", colour = "black"), 
-  axis.ticks = element_blank(), 
-  axis.text = element_blank()))
+My_Theme=theme_set(theme_bw()+theme(
+  panel.grid.major=element_blank(), 
+  panel.grid.minor=element_blank(),
+  panel.background=element_blank(), 
+  panel.border=element_rect(fill=NA, colour="black"), 
+  panel.spacing=unit(1, "lines"),
+  axis.title.x=element_text(size=12, color="black"),
+  axis.text.x=element_text(size=12, color="black"),
+  axis.title.y=element_text(size=12, color="black"),
+  axis.text.y=element_text(size=12, color="black"),
+  legend.text=element_text(size=12, color="black"),
+  strip.text.x=element_text(size=14, color="black"),
+  strip.text.y=element_text(size=14, color="black"),
+  strip.text=element_text(size=14, color="black"),
+  strip.background=element_blank(), 
+  strip.placement="outside",
+  title=element_text(size=14, color="black", face="bold"),
+  axis.title=element_text(size=12, face="bold", colour="black"), 
+  axis.ticks=element_blank(), 
+  axis.text=element_blank()))
 
-cols.site = c("#425754", "#DEB3AD","#A65B24", "#CD9629")
+cols.site=c("#425754", "#DEB3AD","#A65B24", "#CD9629")
 cols.marker=c("#a6cdc6", "#233e34")
-cols.site.paired = c("#425754", "#83BEC6", "#D68C96", "#DEB3AD", "#A65B24", "#E4C188", "#CD9629", "#F4DF9D")
+cols.site.paired=c("#425754", "#83BEC6", "#D68C96", "#DEB3AD", "#A65B24", "#E4C188", "#CD9629", "#F4DF9D")
 
 st_err=function(x) sd(x, na.rm=TRUE) / sqrt(sum(!is.na(x)))
 ```
@@ -128,16 +128,16 @@ st_err=function(x) sd(x, na.rm=TRUE) / sqrt(sum(!is.na(x)))
 metadata=read.csv(file.path(paths$data_raw, "metadata_SST.csv"), header=T)
 
 # Get the world dataset
-world = ne_states(country = "united states of america", returnclass = "sf")
+world=ne_states(country="united states of america", returnclass="sf")
 
 # Filter the dataset to focus on California
-hawaii = world[world$name == "Hawaii", ]
+hawaii=world[world$name == "Hawaii", ]
 
 # Define the locations and labels
-locations = data.frame(
-  Location = c("Maunalua", "Waimānalo", "Kāneʻohe", "Lanikai"),
-  Lat = c(21.275176, 21.326470, 21.434942, 21.393037),
-  Lon = c(-157.760664, -157.682236, -157.787055, -157.714236)
+locations=data.frame(
+  Location=c("Maunalua", "Waimānalo", "Kāneʻohe", "Lanikai"),
+  Lat=c(21.275176, 21.326470, 21.434942, 21.393037),
+  Lon=c(-157.760664, -157.682236, -157.787055, -157.714236)
 )
 ```
 
@@ -146,45 +146,45 @@ locations = data.frame(
 ```{r}
 
 # Plot the map focusing on Oahu with colored points and labels
-main_plot=ggplot(data = hawaii) +
+main_plot=ggplot(data=hawaii) +
   geom_sf() +
   # Drop shadow layer for points
-  #geom_point(data = locations, aes(x = Lon, y = Lat),size = 5, color = "black") +
-  geom_point(data = locations, aes(x = Lon, y = Lat, color = Location), size = 4) +  
-  #geom_text(data = locations, aes(x = Lon, y = Lat, label = Location),hjust = 0.21, vjust = -0.6, size = 6, fontface = "bold", color = "black", stroke = 0.5) + # Black outline for labels
- geom_text(data = locations, aes(x = Lon, y = Lat, label = Location, color = Location), hjust = 0.2, vjust = -0.6, size = 6, fontface = "bold") + # Main text labels
-  annotation_scale(location = "bl", width_hint = 0.5) +
-  annotation_north_arrow(location = "bl", which_north = "true", 
-                         pad_x = unit(0.75, "in"), pad_y = unit(0.5, "in"),
-                         style = north_arrow_fancy_orienteering) +
-  scale_color_manual(values = cols.site) +
-  labs(color = "Location") +
-  coord_sf(xlim = c(-158, -157.6), ylim = c(21.2, 21.5)) +
+  #geom_point(data=locations, aes(x=Lon, y=Lat),size=5, color="black") +
+  geom_point(data=locations, aes(x=Lon, y=Lat, color=Location), size=4) +  
+  #geom_text(data=locations, aes(x=Lon, y=Lat, label=Location),hjust=0.21, vjust=-0.6, size=6, fontface="bold", color="black", stroke=0.5) + # Black outline for labels
+ geom_text(data=locations, aes(x=Lon, y=Lat, label=Location, color=Location), hjust=0.2, vjust=-0.6, size=6, fontface="bold") + # Main text labels
+  annotation_scale(location="bl", width_hint=0.5) +
+  annotation_north_arrow(location="bl", which_north="true", 
+                         pad_x=unit(0.75, "in"), pad_y=unit(0.5, "in"),
+                         style=north_arrow_fancy_orienteering) +
+  scale_color_manual(values=cols.site) +
+  labs(color="Location") +
+  coord_sf(xlim=c(-158, -157.6), ylim=c(21.2, 21.5)) +
   My_Theme + 
-  theme(legend.position = "none") + labs(x="", y="")
+  theme(legend.position="none") + labs(x="", y="")
 
 
 
 
 # Data for the inset map (assuming inset_map is an sf object)
 # Replace with your actual data
-inset_map = hawaii
+inset_map=hawaii
 
 # Create the inset map plot with a smaller size and a box around it
-inset_plot = ggplot(data = inset_map) +
+inset_plot=ggplot(data=inset_map) +
   geom_sf() +
-  geom_point(data = locations[1, ], aes(x = Lon, y = Lat), color = "black", size = 2) + # Marker for Honolulu
-  coord_sf(xlim = c(-160, -154), ylim = c(18, 23)) + # Adjust the limits for the inset map
+  geom_point(data=locations[1, ], aes(x=Lon, y=Lat), color="black", size=2) + # Marker for Honolulu
+  coord_sf(xlim=c(-160, -154), ylim=c(18, 23)) + # Adjust the limits for the inset map
   theme_void() + # Remove axis labels and ticks
-  theme(plot.background = element_rect(color = "black", size = 1)) # Add a black border around the plot
+  theme(plot.background=element_rect(color="black", size=1)) # Add a black border around the plot
 
-map=main_plot + annotation_custom(ggplotGrob(inset_plot), xmin = -158, xmax = -157.9, ymin = 21.4, ymax = 21.5) + 
-  geom_text(aes(x = -157.985, y = 21.445, label = "Hawaiʻi"), 
-            hjust = 0, vjust = 1, size = 4, fontface = "bold") +
-  geom_text(aes(x = -157.985, y = 21.45, label = "Oʻahu"), 
-            hjust = 0, vjust = 0, size = 4, fontface = "bold") + 
-  geom_text(aes(x = -157.89, y = 21.33, label = "Honolulu"), 
-            hjust = 0, vjust = 1, size = 4, fontface = "bold") + geom_point(aes(x = -157.8583, y = 21.3069), color = "black", size = 3) +geom_point(aes(x = -157.8583, y = 21.3069), shape = 5, size = 6) + theme(panel.grid = element_blank()) 
+map=main_plot + annotation_custom(ggplotGrob(inset_plot), xmin=-158, xmax=-157.9, ymin=21.4, ymax=21.5) + 
+  geom_text(aes(x=-157.985, y=21.445, label="Hawaiʻi"), 
+            hjust=0, vjust=1, size=4, fontface="bold") +
+  geom_text(aes(x=-157.985, y=21.45, label="Oʻahu"), 
+            hjust=0, vjust=0, size=4, fontface="bold") + 
+  geom_text(aes(x=-157.89, y=21.33, label="Honolulu"), 
+            hjust=0, vjust=1, size=4, fontface="bold") + geom_point(aes(x=-157.8583, y=21.3069), color="black", size=3) +geom_point(aes(x=-157.8583, y=21.3069), shape=5, size=6) + theme(panel.grid=element_blank()) 
 
 map
 ```
@@ -205,17 +205,17 @@ nmds.data=rbind(nmds.data.18S, nmds.data.COI)
 ### iii. Panel B
 
 ```{r}
-nmds.site = ggplot(nmds.data, aes(x = NMDS1, y = NMDS2)) +
-  geom_point(aes(colour = SITE), alpha = 0.33) +
-  geom_vline(xintercept = 0, lty = 2, col = "grey66") +
-  geom_hline(yintercept = 0, lty = 2, col = "grey66") +
-  stat_ellipse(aes(fill = SITE, colour = SITE),
-               level = 0.95, geom = "polygon", alpha = 0.3) +
-  scale_fill_manual(values = cols.site) +
-  scale_color_manual(values = cols.site) +
+nmds.site=ggplot(nmds.data, aes(x=NMDS1, y=NMDS2)) +
+  geom_point(aes(colour=SITE), alpha=0.33) +
+  geom_vline(xintercept=0, lty=2, col="grey66") +
+  geom_hline(yintercept=0, lty=2, col="grey66") +
+  stat_ellipse(aes(fill=SITE, colour=SITE),
+               level=0.95, geom="polygon", alpha=0.3) +
+  scale_fill_manual(values=cols.site) +
+  scale_color_manual(values=cols.site) +
   facet_wrap(~ MARKER, scales="free") +
   My_Theme +
-  theme(legend.position = "right") 
+  theme(legend.position="right") 
 
 nmds.site
 ```
@@ -226,21 +226,21 @@ nmds.site
 fig1=ggarrange(
   map,
   nmds.site,
-  ncol = 1,
-  nrow = 2,
-  heights = c(1.3, 1),
-  widths = c(2, 1),
-  labels = "AUTO"
+  ncol=1,
+  nrow=2,
+  heights=c(1.3, 1),
+  widths=c(2, 1),
+  labels="AUTO"
 )
 
 ggsave(
-  filename = file.path(paths$results_figs, "FIGURE_1.pdf"),
-  plot     = fig1,
-  width    = 6,
-  height   = 8,
-  units    = "in",
-  device   = cairo_pdf,
-  family   = "Arial"
+  filename=file.path(paths$results_figs, "FIGURE_1.pdf"),
+  plot    =fig1,
+  width   =6,
+  height  =8,
+  units   ="in",
+  device  =cairo_pdf,
+  family  ="Arial"
 )
 ```
 
@@ -250,12 +250,12 @@ ggsave(
 
 ```{r}
 ## Marker Decay
-zeta.str.decay.18S=read.csv(file.path(paths$results_tables, "zeta_decay_scaled_marker18S.csv"), header = T)
-zeta.str.decay.COI=read.csv(file.path(paths$results_tables, "zeta_decay_scaled_markerCOI.csv"), header = T)
+zeta.str.decay.18S=read.csv(file.path(paths$results_tables, "zeta_decay_scaled_marker18S.csv"), header=T)
+zeta.str.decay.COI=read.csv(file.path(paths$results_tables, "zeta_decay_scaled_markerCOI.csv"), header=T)
 zeta.str.decay=rbind(zeta.str.decay.18S, zeta.str.decay.COI)
 
 ## Marker Ratio
-zeta.str.ratio.18S=read.csv(file.path(paths$results_tables, "zeta_ratio_marker18S.csv"), header = T)
+zeta.str.ratio.18S=read.csv(file.path(paths$results_tables, "zeta_ratio_marker18S.csv"), header=T)
 zeta.str.ratio.COI=read.csv(file.path(paths$results_tables, "zeta_ratio_markerCOI.csv"), header=T)
 zeta.str.ratio=rbind(zeta.str.ratio.18S, zeta.str.ratio.COI)
 
@@ -267,26 +267,26 @@ zeta.str.site=rbind(zeta.str.site.18S, zeta.str.site.COI)
 
 #combined structure decay and ratio
 zeta.str.decay$variable="Zeta Decay"
-zeta.decay.long = zeta.str.decay %>%
+zeta.decay.long=zeta.str.decay %>%
   transmute(
     zeta.order,
-    y = zeta.val,
-    sd = zeta.val.sd,
+    y=zeta.val,
+    sd=zeta.val.sd,
     Marker,
     variable
   )
 
 zeta.str.ratio$variable="Zeta Ratio"
-zeta.ratio.long = zeta.str.ratio %>%
+zeta.ratio.long=zeta.str.ratio %>%
   transmute(
     zeta.order,
-    y = ratio,
-    sd = NA_real_,
+    y=ratio,
+    sd=NA_real_,
     Marker,
     variable
   )
 
-zeta.str = bind_rows(zeta.decay.long, zeta.ratio.long)
+zeta.str=bind_rows(zeta.decay.long, zeta.ratio.long)
 ```
 
 ###ii. Decay and ratio plots
@@ -295,19 +295,19 @@ zeta.str = bind_rows(zeta.decay.long, zeta.ratio.long)
 
 ```{r}
 zeta.markerplot=zeta.str %>% 
-  ggplot(aes(x = zeta.order, y = y, color = Marker)) + # Map color to MARKER
+  ggplot(aes(x=zeta.order, y=y, color=Marker)) + # Map color to MARKER
   geom_point() + # Points inherit color from aes
   geom_line() +  # Lines inherit color from aes
   geom_ribbon(
-    aes(ymin = y - sd, ymax = y + sd, fill = Marker), 
-    alpha = 0.1, # Transparency for the ribbon
-    color = NA # No border color
+    aes(ymin=y - sd, ymax=y + sd, fill=Marker), 
+    alpha=0.1, # Transparency for the ribbon
+    color=NA # No border color
   ) +
-  scale_color_manual(values = cols.marker) + # Custom colors for MARKER
-  scale_fill_manual(values = cols.marker) +  # Ribbon fill colors based on MARKER
+  scale_color_manual(values=cols.marker) + # Custom colors for MARKER
+  scale_fill_manual(values=cols.marker) +  # Ribbon fill colors based on MARKER
   ylab("Proportion") +
   xlab("") + facet_wrap(~variable, scales="free_y") +
-  My_Theme + theme(legend.position = "right") + xlim(0,16)+scale_y_log10() + ylim(0,1)
+  My_Theme + theme(legend.position="right") + xlim(0,16)+scale_y_log10() + ylim(0,1)
 zeta.markerplot
 ```
 
@@ -315,35 +315,35 @@ zeta.markerplot
 #### b. Panels C-D
 
 ```{r}
-zeta.siteplot = zeta.str.site %>% 
-  ggplot(aes(x = zeta.order, y = zeta.val, color = Site)) + # Map color to MARKER
+zeta.siteplot=zeta.str.site %>% 
+  ggplot(aes(x=zeta.order, y=zeta.val, color=Site)) + # Map color to MARKER
   geom_point() + # Points inherit color from aes
   geom_line() +  # Lines inherit color from aes
   geom_ribbon(
-    aes(ymin = zeta.val - zeta.val.sd, ymax = zeta.val + zeta.val.sd, fill = Site), 
-    alpha = 0.1, # Transparency for the ribbon
-    color = NA # No border color
+    aes(ymin=zeta.val - zeta.val.sd, ymax=zeta.val + zeta.val.sd, fill=Site), 
+    alpha=0.1, # Transparency for the ribbon
+    color=NA # No border color
   ) +
-  scale_color_manual(values = cols.site) + # Custom colors for MARKER
-  scale_fill_manual(values = cols.site) +  # Ribbon fill colors based on MARKER
+  scale_color_manual(values=cols.site) + # Custom colors for MARKER
+  scale_fill_manual(values=cols.site) +  # Ribbon fill colors based on MARKER
   ylab("Proportion") +
   xlab("Zeta Order") + facet_wrap(~Marker) +
-  My_Theme + theme(legend.position = "right")+ xlim(0,16) + ylim(0,1)+ scale_y_log10()
+  My_Theme + theme(legend.position="right")+ xlim(0,16) + ylim(0,1)+ scale_y_log10()
 ```
 
 ###iii. Export
 
 ```{r}
-fig2=ggarrange(zeta.markerplot, zeta.siteplot, ncol = 1, nrow = 2, align = "hv", legend = "none")
+fig2=ggarrange(zeta.markerplot, zeta.siteplot, ncol=1, nrow=2, align="hv", legend="none")
 fig2
 ggsave(
-  filename = file.path(paths$results_figs, "FIGURE_2.pdf"),
-  plot     = fig2,
-  width    = 8,
-  height   = 5,
-  units    = "in",
-  device   = cairo_pdf,
-  family   = "Arial"
+  filename=file.path(paths$results_figs, "FIGURE_2.pdf"),
+  plot    =fig2,
+  width   =8,
+  height  =5,
+  units   ="in",
+  device  =cairo_pdf,
+  family  ="Arial"
 )
 ```
 
@@ -352,35 +352,35 @@ ggsave(
 ### i. Core taxa by site
 
 ```{r}
-taxon_counts_site_18S=read.csv(file.path(paths$results_tables, "coreMOTUs_site_18S.csv"), header = T)
-taxon_counts_site_COI=read.csv(file.path(paths$results_tables, "coreMOTUs_site_COI.csv"), header = T)
-taxon_counts_site = rbind(taxon_counts_site_18S, taxon_counts_site_COI)
+taxon_counts_site_18S=read.csv(file.path(paths$results_tables, "coreMOTUs_site_18S.csv"), header=T)
+taxon_counts_site_COI=read.csv(file.path(paths$results_tables, "coreMOTUs_site_COI.csv"), header=T)
+taxon_counts_site=rbind(taxon_counts_site_18S, taxon_counts_site_COI)
 
 # Remove NA phyla
-taxon_counts_site = taxon_counts_site %>% filter(!is.na(phylum))
+taxon_counts_site=taxon_counts_site %>% filter(!is.na(phylum))
 
 # Define manual order (same for both markers)
-desired_order = c("Hemichordata","Chordata", "Ochrophyta","Annelida","Mollusca","Rhodophyta","Cnidaria","Chlorophyta","Porifera", "NA")
+desired_order=c("Hemichordata","Chordata", "Ochrophyta","Annelida","Mollusca","Rhodophyta","Cnidaria","Chlorophyta","Porifera", "NA")
 
 
 # Apply factor levels
-taxon_counts_site = taxon_counts_site %>%
-  mutate(phylum = factor(phylum, levels = desired_order))
+taxon_counts_site=taxon_counts_site %>%
+  mutate(phylum=factor(phylum, levels=desired_order))
 
 # Remove NA phyla
-taxon_counts_site = taxon_counts_site %>%
+taxon_counts_site=taxon_counts_site %>%
   filter(!is.na(phylum))
 
-fig3 = ggplot(taxon_counts_site, aes(x = phylum, y = n, fill = Site)) +
-  geom_bar(stat = "identity", position = "stack") +
-  labs(x = "", y = "Total MOTUs") + 
+fig3=ggplot(taxon_counts_site, aes(x=phylum, y=n, fill=Site)) +
+  geom_bar(stat="identity", position="stack") +
+  labs(x="", y="Total MOTUs") + 
   My_Theme +
   theme(
-    plot.margin = unit(c(5, 20, 5, 5), "pt"),
-    axis.text.y = element_text(size = 10, hjust = 1),
-    legend.position = "none"
+    plot.margin=unit(c(5, 20, 5, 5), "pt"),
+    axis.text.y=element_text(size=10, hjust=1),
+    legend.position="none"
   ) +
-  scale_fill_manual(values = cols.site) +
+  scale_fill_manual(values=cols.site) +
   facet_wrap(~ Marker)+
    scale_y_sqrt() +coord_flip() 
 fig3
@@ -390,13 +390,13 @@ fig3
 
 ```{r}
 ggsave(
-  filename = file.path(paths$results_figs, "FIGURE_3.pdf"),
-  plot     = fig3,
-  width    = 7,
-  height   = 4,
-  units    = "in",
-  device   = cairo_pdf,
-  family   = "Arial"
+  filename=file.path(paths$results_figs, "FIGURE_3.pdf"),
+  plot    =fig3,
+  width   =7,
+  height  =4,
+  units   ="in",
+  device  =cairo_pdf,
+  family  ="Arial"
 )
 ```
 
@@ -405,41 +405,41 @@ ggsave(
 ### i. Alpha diversity data
 
 ```{r}
-div.18S = read.csv(
+div.18S=read.csv(
   file.path(paths$results_tables, "alpha_div_18S_iNEXT.csv"),
-  header = TRUE
+  header=TRUE
 )
-div.18S$MARKER = "18S"
-div.18S$prop = div.18S$Richness / max(div.18S$Richness, na.rm = TRUE)
+div.18S$MARKER="18S"
+div.18S$prop=div.18S$Richness / max(div.18S$Richness, na.rm=TRUE)
 
-div.COI = read.csv(
+div.COI=read.csv(
   file.path(paths$results_tables, "alpha_div_COI_iNEXT.csv"),
-  header = TRUE
+  header=TRUE
 )
-div.COI$MARKER = "COI"
-div.COI$prop = div.COI$Richness / max(div.COI$Richness, na.rm = TRUE)
+div.COI$MARKER="COI"
+div.COI$prop=div.COI$Richness / max(div.COI$Richness, na.rm=TRUE)
 
 # Combine
-data_alphadiv = rbind(div.18S, div.COI)
+data_alphadiv=rbind(div.18S, div.COI)
 
 # ===============================
 # Data preparation
 # ===============================
-alpha = subset(data_alphadiv, STEP != 1)
-alpha$STEP = as.factor(alpha$STEP)
+alpha=subset(data_alphadiv, STEP != 1)
+alpha$STEP=as.factor(alpha$STEP)
 
-alpha$DATE = as.character(alpha$DATE)
+alpha$DATE=as.character(alpha$DATE)
 
 # Parse as DD/MM/YYYY
-alpha$DATE = as.Date(alpha$DATE, format = "%d/%m/%Y")
+alpha$DATE=as.Date(alpha$DATE, format="%d/%m/%Y")
 
 # Create MM/YY label
-alpha$MONTH_YEAR = format(alpha$DATE, "%m/%y")
+alpha$MONTH_YEAR=format(alpha$DATE, "%m/%y")
 
 # Order chronologically
-alpha$MONTH_YEAR = factor(
+alpha$MONTH_YEAR=factor(
   alpha$MONTH_YEAR,
-  levels = unique(alpha$MONTH_YEAR[
+  levels=unique(alpha$MONTH_YEAR[
     order(as.yearmon(alpha$MONTH_YEAR, "%m/%y"))
   ])
 )
@@ -447,9 +447,9 @@ alpha$MONTH_YEAR = factor(
 # ===============================
 # SST summary
 # ===============================
-alpha_avg_SST = alpha %>%
+alpha_avg_SST=alpha %>%
   group_by(MONTH_YEAR) %>%
-  summarise(mean_SST = mean(SST, na.rm = TRUE), .groups = "drop")
+  summarise(mean_SST=mean(SST, na.rm=TRUE), .groups="drop")
 
 ```
 
@@ -459,86 +459,86 @@ alpha_avg_SST = alpha %>%
 # ===============================
 # Shading indices (based on MM/YY)
 # ===============================
-shading_start_index  = which(levels(alpha$MONTH_YEAR) == "09/19")
-shading_end_index    = which(levels(alpha$MONTH_YEAR) == "11/19")
+shading_start_index =which(levels(alpha$MONTH_YEAR) == "09/19")
+shading_end_index   =which(levels(alpha$MONTH_YEAR) == "11/19")
 
-shading_start_index2 = which(levels(alpha$MONTH_YEAR) == "09/20")
-shading_end_index2   = which(levels(alpha$MONTH_YEAR) == "11/20")
+shading_start_index2=which(levels(alpha$MONTH_YEAR) == "09/20")
+shading_end_index2  =which(levels(alpha$MONTH_YEAR) == "11/20")
 
 # ===============================
 # Vertical line positions
 # ===============================
-step_levels = levels(alpha$MONTH_YEAR)
-vline_positions = seq(1.5, length(step_levels) - 0.5, by = 1)
+step_levels=levels(alpha$MONTH_YEAR)
+vline_positions=seq(1.5, length(step_levels) - 0.5, by=1)
 
 # ===============================
 # Plot
 # ===============================
-richnesstimestep = ggplot(
+richnesstimestep=ggplot(
   alpha,
-  aes(x = MONTH_YEAR, y = prop, fill = MARKER)
+  aes(x=MONTH_YEAR, y=prop, fill=MARKER)
 ) +
 
   # Shaded periods
   annotate(
     "rect",
-    xmin = shading_start_index - 0.5,
-    xmax = shading_end_index + 0.5,
-    ymin = -Inf, ymax = Inf,
-    fill = "grey55", alpha = 0.3
+    xmin=shading_start_index - 0.5,
+    xmax=shading_end_index + 0.5,
+    ymin=-Inf, ymax=Inf,
+    fill="grey55", alpha=0.3
   ) +
   annotate(
     "rect",
-    xmin = shading_start_index2 - 0.5,
-    xmax = shading_end_index2 + 0.5,
-    ymin = -Inf, ymax = Inf,
-    fill = "grey55", alpha = 0.3
+    xmin=shading_start_index2 - 0.5,
+    xmax=shading_end_index2 + 0.5,
+    ymin=-Inf, ymax=Inf,
+    fill="grey55", alpha=0.3
   ) +
 
   # Vertical separators
   geom_vline(
-    xintercept = vline_positions,
-    linetype = "dashed",
-    color = "grey"
+    xintercept=vline_positions,
+    linetype="dashed",
+    color="grey"
   ) +
 
   # SST line (scaled to richness axis)
   geom_line(
-    data = alpha_avg_SST,
+    data=alpha_avg_SST,
     aes(
-      x = MONTH_YEAR,
-      y = (mean_SST - 18) / (28 - 18),
-      group = 1
+      x=MONTH_YEAR,
+      y=(mean_SST - 18) / (28 - 18),
+      group=1
     ),
-    color = "black",
-    size = 0.8, inherit.aes = F
+    color="black",
+    size=0.8, inherit.aes=F
   ) +
 
   # Distributions
-  geom_violin(alpha = 0.5, scale = "width") +
+  geom_violin(alpha=0.5, scale="width") +
   geom_boxplot(
-    width = 0.2,
-    position = position_dodge(width = 0.8),
-    outlier.shape = NA,
-    alpha = 0.7
+    width=0.2,
+    position=position_dodge(width=0.8),
+    outlier.shape=NA,
+    alpha=0.7
   ) +
 
   # Axes
   scale_y_continuous(
-    name = "Richness",
-    sec.axis = sec_axis(
+    name="Richness",
+    sec.axis=sec_axis(
       ~ . * (28 - 18) + 18,
-      name = "SST (°C)",
-      breaks = seq(18, 28, by = 1)
+      name="SST (°C)",
+      breaks=seq(18, 28, by=1)
     )
   ) +
 
-  scale_fill_manual(values = cols.marker) +
-  labs(x = "", y = "Richness") +
+  scale_fill_manual(values=cols.marker) +
+  labs(x="", y="Richness") +
 
   theme(
-    legend.position = "none",
-    axis.text.x = element_text(angle = 45, hjust = 1)
+    legend.position="none",
+    axis.text.x=element_text(angle=45, hjust=1)
   )
 ```
 
@@ -546,32 +546,32 @@ richnesstimestep = ggplot(
 
 ```{r}
 # Read the data
-turnover.18S = read.csv(file.path(paths$results_tables, "turnover_18S.csv"), header = T)
-turnover.COI = read.csv(file.path(paths$results_tables, "turnover_COI.csv"), header = T)
+turnover.18S=read.csv(file.path(paths$results_tables, "turnover_18S.csv"), header=T)
+turnover.COI=read.csv(file.path(paths$results_tables, "turnover_COI.csv"), header=T)
 
 # Combine the data
-turnover.site = rbind(turnover.18S, turnover.COI)
+turnover.site=rbind(turnover.18S, turnover.COI)
 
 # Reorder SITE so "Overall" is the first level
-turnover.site$SITE = fct_relevel(turnover.site$SITE, "Overall")
+turnover.site$SITE=fct_relevel(turnover.site$SITE, "Overall")
 
 # Define colors for sites
-site_levels = levels(turnover.site$SITE)
-site_colors = c("Overall" = "black", setNames(cols.site, site_levels[-1]))
+site_levels=levels(turnover.site$SITE)
+site_colors=c("Overall"="black", setNames(cols.site, site_levels[-1]))
 
 # Assign final color based on Measure and SITE
-turnover.site$final_color = ifelse(
+turnover.site$final_color=ifelse(
   turnover.site$Measure == "Total",
   ifelse(turnover.site$SITE == "Overall", "Overall", as.character(turnover.site$SITE)),
   as.character(turnover.site$Measure)
 )
 
 # Convert MonthYear to Date using proper parsing
-turnover.site$MonthYearDate = as.Date(paste0("01/", turnover.site$MonthYear), format = "%d/%m/%y")
+turnover.site$MonthYearDate=as.Date(paste0("01/", turnover.site$MonthYear), format="%d/%m/%y")
 
 # Order data by MonthYearDate and update MonthYear factor levels
-turnover.site = turnover.site[order(turnover.site$MonthYearDate), ]
-turnover.site$MonthYear = factor(turnover.site$MonthYear, levels = unique(turnover.site$MonthYear))
+turnover.site=turnover.site[order(turnover.site$MonthYearDate), ]
+turnover.site$MonthYear=factor(turnover.site$MonthYear, levels=unique(turnover.site$MonthYear))
 ```
 
 ### iv. Panel B
@@ -579,56 +579,56 @@ turnover.site$MonthYear = factor(turnover.site$MonthYear, levels = unique(turnov
 ```{r}
 
 # Select every other label for x-axis
-labels_to_show = levels(turnover.site$MonthYear)[seq(1, length(levels(turnover.site$MonthYear)), by = 2)]
+labels_to_show=levels(turnover.site$MonthYear)[seq(1, length(levels(turnover.site$MonthYear)), by=2)]
 
 # Identify the index positions for the shading range
-shading_start_index = which(levels(turnover.site$MonthYear) == "09/19")
-shading_end_index = which(levels(turnover.site$MonthYear) == "11/19")
+shading_start_index=which(levels(turnover.site$MonthYear) == "09/19")
+shading_end_index=which(levels(turnover.site$MonthYear) == "11/19")
 
-shading_start_index2 = which(levels(turnover.site$MonthYear) == "09/20")
-shading_end_index2 = which(levels(turnover.site$MonthYear) == "11/20")
+shading_start_index2=which(levels(turnover.site$MonthYear) == "09/20")
+shading_end_index2=which(levels(turnover.site$MonthYear) == "11/20")
 
-labels_to_show = levels(turnover.site$MonthYear)[seq(1, length(levels(turnover.site$MonthYear)), by = 3)]
+labels_to_show=levels(turnover.site$MonthYear)[seq(1, length(levels(turnover.site$MonthYear)), by=3)]
 
 
 # Create the plot with background shading
-turnover.site.plot = ggplot(turnover.site, aes(x = MonthYear, y = value, color = final_color, linetype = Measure, group = interaction(Measure, SITE), shape = Measure)) +
-  annotate("rect", xmin = shading_start_index-2, xmax = shading_end_index, ymin = -Inf, ymax = Inf, 
-           fill = "grey95", alpha = 1) +
-  annotate("rect", xmin = shading_start_index2, xmax = shading_end_index2, ymin = -Inf, ymax = Inf, 
-           fill = "grey95", alpha = 1) + geom_vline(xintercept = c(shading_end_index2, shading_end_index, shading_start_index2), 
-             linetype = "dashed", color = "grey80", size = 0.7, alpha = 0.6)+
-  geom_line(aes(linewidth = Measure)) +  # Apply linewidth mapping
+turnover.site.plot=ggplot(turnover.site, aes(x=MonthYear, y=value, color=final_color, linetype=Measure, group=interaction(Measure, SITE), shape=Measure)) +
+  annotate("rect", xmin=shading_start_index-2, xmax=shading_end_index, ymin=-Inf, ymax=Inf, 
+           fill="grey95", alpha=1) +
+  annotate("rect", xmin=shading_start_index2, xmax=shading_end_index2, ymin=-Inf, ymax=Inf, 
+           fill="grey95", alpha=1) + geom_vline(xintercept=c(shading_end_index2, shading_end_index, shading_start_index2), 
+             linetype="dashed", color="grey80", size=0.7, alpha=0.6)+
+  geom_line(aes(linewidth=Measure)) +  # Apply linewidth mapping
   ylab("Turnover")+
   xlab("") +
-  theme_bw(base_size = 18) +
+  theme_bw(base_size=18) +
   scale_x_discrete(
-    breaks = labels_to_show,  
-    labels = labels_to_show  
+    breaks=labels_to_show,  
+    labels=labels_to_show  
   ) +
   facet_grid(Marker ~ SITE) +
   My_Theme +
-  scale_color_manual(values = c(cols.site, site_colors, "Appearance" = "black", "Disappearance"="grey33")) +  # Change color of "Disappearance" to dark grey
-  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none") +
-  scale_linetype_manual(values = c("Total" = "solid", "Appearance" = "solid", "Disappearance" = "dotdash")) +
-  scale_shape_manual(values = c("Total" = 19, "Appearance" = 16, "Disappearance" = 15)) + 
-  scale_linewidth_manual(values = c("Total" = 1.5, "Appearance" = 0.5, "Disappearance" = 0.5)) +
-  theme(legend.position = "none")
+  scale_color_manual(values=c(cols.site, site_colors, "Appearance"="black", "Disappearance"="grey33")) +  # Change color of "Disappearance" to dark grey
+  theme(axis.text.x=element_text(angle=45, hjust=1), legend.position="none") +
+  scale_linetype_manual(values=c("Total"="solid", "Appearance"="solid", "Disappearance"="dotdash")) +
+  scale_shape_manual(values=c("Total"=19, "Appearance"=16, "Disappearance"=15)) + 
+  scale_linewidth_manual(values=c("Total"=1.5, "Appearance"=0.5, "Disappearance"=0.5)) +
+  theme(legend.position="none")
 ```
 
 ### v. Export
 
 ```{r}
-fig5=ggarrange(richnesstimestep, turnover.site.plot, ncol = 1, labels = "AUTO", font.label = list(size = 18, color = "black", face = "bold", family = "Arial"))
+fig5=ggarrange(richnesstimestep, turnover.site.plot, ncol=1, labels="AUTO", font.label=list(size=18, color="black", face="bold", family="Arial"))
 fig5
 ggsave(
-  filename = file.path(paths$results_figs, "FIGURE_5.pdf"),
-  plot     = fig5,
-  width    = 9,
-  height   = 8,
-  units    = "in",
-  device   = cairo_pdf,
-  family   = "Arial"
+  filename=file.path(paths$results_figs, "FIGURE_5.pdf"),
+  plot    =fig5,
+  width   =9,
+  height  =8,
+  units   ="in",
+  device  =cairo_pdf,
+  family  ="Arial"
 )
 ```
 
@@ -641,17 +641,17 @@ ggsave(
 ```{r}
 alpha.mod=alpha
 # Create prop2 scaled away from exact 0 and 1 - Smithson & Verkuilen correction
-alpha.mod$prop2 = (alpha.mod$prop * (nrow(alpha.mod) - 1) + 0.5) / nrow(alpha.mod)
+alpha.mod$prop2=(alpha.mod$prop * (nrow(alpha.mod) - 1) + 0.5) / nrow(alpha.mod)
 
 # Step 1: Scale continuous predictors
-alpha.mod$SST_scaled = scale(alpha.mod$SST)
-alpha.mod$tide_scaled = scale(alpha.mod$tide_height_m)
-alpha.mod$wave_scaled = scale(alpha.mod$WVHT)
-alpha.mod$wind_scaled = scale(alpha.mod$WSPD)
-alpha.mod$illum_scaled = scale(alpha.mod$illum)
-alpha.mod$SITE = as.factor(alpha.mod$SITE)
-alpha.mod$MARKER = as.factor(alpha.mod$MARKER)
-alpha.mod$SEASON = as.factor(alpha.mod$SEASON)
+alpha.mod$SST_scaled=scale(alpha.mod$SST)
+alpha.mod$tide_scaled=scale(alpha.mod$tide_height_m)
+alpha.mod$wave_scaled=scale(alpha.mod$WVHT)
+alpha.mod$wind_scaled=scale(alpha.mod$WSPD)
+alpha.mod$illum_scaled=scale(alpha.mod$illum)
+alpha.mod$SITE=as.factor(alpha.mod$SITE)
+alpha.mod$MARKER=as.factor(alpha.mod$MARKER)
+alpha.mod$SEASON=as.factor(alpha.mod$SEASON)
 ```
 
 ####b. eDNA Index 
@@ -665,31 +665,31 @@ data.long.COI$MARKER="COI"
 
 data.long.all=rbind(data.long.18S, data.long.COI)
 
-data.long.top5 = subset(data.long.all, phylum %in% c("Arthropoda", "Annelida", "Cnidaria", "Mollusca", "Porifera")) #subsetting top phylum only, to reduce computation time of eDNA index GAMM
+data.long.top5=subset(data.long.all, phylum %in% c("Arthropoda", "Annelida", "Cnidaria", "Mollusca", "Porifera")) #subsetting top phylum only, to reduce computation time of eDNA index GAMM
 
 # Smithson & Verkuilen correction for beta family model fit
-data.long.top5$value2 = (data.long.top5$value * (nrow(data.long.top5) - 1) + 0.5) / nrow(data.long.top5)
+data.long.top5$value2=(data.long.top5$value * (nrow(data.long.top5) - 1) + 0.5) / nrow(data.long.top5)
 
-data.long.top5 = data.long.top5 %>%
+data.long.top5=data.long.top5 %>%
   mutate(
-    SST_scaled = scale(SST),
-    tide_scaled = scale(tide_height_m),
-    wave_scaled = scale(WVHT),
-    wind_scaled = scale(WSPD),
-    illum_scaled = scale(illum)
+    SST_scaled=scale(SST),
+    tide_scaled=scale(tide_height_m),
+    wave_scaled=scale(WVHT),
+    wind_scaled=scale(WSPD),
+    illum_scaled=scale(illum)
   )
 
-data.long.top5 = data.long.top5 %>%
+data.long.top5=data.long.top5 %>%
   mutate(
-    SITE = as.factor(SITE),
-    MARKER = as.factor(MARKER),
-    SEASON = as.factor(SEASON)
+    SITE=as.factor(SITE),
+    MARKER=as.factor(MARKER),
+    SEASON=as.factor(SEASON)
   )
 
-phylum_counts = data.long.top5 %>%
+phylum_counts=data.long.top5 %>%
   # Replace blank or NA phylum with "Unknown"
-  mutate(phylum = ifelse(phylum == "" | is.na(phylum), "Unknown", phylum)) %>%
-  mutate(phylum = factor(phylum))
+  mutate(phylum=ifelse(phylum == "" | is.na(phylum), "Unknown", phylum)) %>%
+  mutate(phylum=factor(phylum))
 ```
 
 ### ii. Pooled GAMMs
@@ -700,569 +700,569 @@ phylum_counts = data.long.top5 %>%
 knots=4 #knots for GAM smoothers
 
 ### Richness GAM ###########################################
-model_beta_gam <- mgcv::gam(prop2 ~ SEASON + MARKER +  s(SST_scaled, k=knots, bs="ts") + s(wind_scaled, k=knots, bs="ts") + s(wave_scaled, k=knots, bs="ts") +s(tide_scaled, k=knots, bs="ts") + s(degrees, k=knots, bs="cc") + s(MWD, k=knots, bs="cc") + s(WDIR, k=knots, bs="cc") + s(SITE, bs="re"),data = alpha.mod,family = betar(link="logit"),method = "REML",select = TRUE)
+model_beta_gam=mgcv::gam(prop2 ~ SEASON + MARKER +  s(SST_scaled, k=knots, bs="ts") + s(wind_scaled, k=knots, bs="ts") + s(wave_scaled, k=knots, bs="ts") +s(tide_scaled, k=knots, bs="ts") + s(degrees, k=knots, bs="cc") + s(MWD, k=knots, bs="cc") + s(WDIR, k=knots, bs="cc") + s(SITE, bs="re"),data=alpha.mod,family=betar(link="logit"),method="REML",select=TRUE)
 saveRDS(model_beta_gam,file.path(paths$results_rds,"GAMMmodel_richness.rds"))
 ############################################################
 
 
 ### eDNA Index GAM #####################################################
-model_beta_reads_gam <- mgcv::gam(value2 ~ SEASON + MARKER + s(SST_scaled, k=knots, bs="ts") + s(wind_scaled, k=knots, bs="ts") + s(wave_scaled, k=knots, bs="ts") + s(tide_scaled, k=knots, bs="ts") + s(degrees, k=knots, bs="cc") + s(MWD, k=knots, bs="cc") + s(WDIR, k=knots, bs="cc") + s(SITE, bs="re") + s(phylum, bs="re"), data = phylum_counts, family = betar(link="logit"),method = "REML",select = TRUE)
+model_beta_reads_gam=mgcv::gam(value2 ~ SEASON + MARKER + s(SST_scaled, k=knots, bs="ts") + s(wind_scaled, k=knots, bs="ts") + s(wave_scaled, k=knots, bs="ts") + s(tide_scaled, k=knots, bs="ts") + s(degrees, k=knots, bs="cc") + s(MWD, k=knots, bs="cc") + s(WDIR, k=knots, bs="cc") + s(SITE, bs="re") + s(phylum, bs="re"), data=phylum_counts, family=betar(link="logit"),method="REML",select=TRUE)
 saveRDS(model_beta_reads_gam,file.path(paths$results_rds,"GAMMmodel_reads.rds"))
 #######################################################################
 
 ##RICHNESS OUTPUT
 model_beta_gam=readRDS(file=file.path(paths$results_rds,"GAMMmodel_richness.rds"))
-gam_sum_richness <- summary(model_beta_gam)
+gam_sum_richness=summary(model_beta_gam)
 
 # Create parametric coefficients table with consistent column names
-p_table_richness <- data.frame(
-  Term = rownames(gam_sum_richness$p.table),
-  Estimate = round(gam_sum_richness$p.table[,1], 3),
-  Std_Error = round(gam_sum_richness$p.table[,2], 3),
-  Statistic = round(gam_sum_richness$p.table[,3], 2),
-  P_value = gam_sum_richness$p.table[,4],
-  Significance = ifelse(gam_sum_richness$p.table[,4] < 0.001, "***",
+p_table_richness=data.frame(
+  Term=rownames(gam_sum_richness$p.table),
+  Estimate=round(gam_sum_richness$p.table[,1], 3),
+  Std_Error=round(gam_sum_richness$p.table[,2], 3),
+  Statistic=round(gam_sum_richness$p.table[,3], 2),
+  P_value=gam_sum_richness$p.table[,4],
+  Significance=ifelse(gam_sum_richness$p.table[,4] < 0.001, "***",
                  ifelse(gam_sum_richness$p.table[,4] < 0.01, "**",
                  ifelse(gam_sum_richness$p.table[,4] < 0.05, "*",
                  ifelse(gam_sum_richness$p.table[,4] < 0.1, ".", "")))),
-  edf = NA,
-  Ref_df = NA,
-  Chi_sq = NA,
-  stringsAsFactors = FALSE
+  edf=NA,
+  Ref_df=NA,
+  Chi_sq=NA,
+  stringsAsFactors=FALSE
 )
 
 # Clean up P_value column
-p_table_richness$P_value <- ifelse(p_table_richness$P_value < 0.001, "<0.001",
+p_table_richness$P_value=ifelse(p_table_richness$P_value < 0.001, "<0.001",
                             round(p_table_richness$P_value, 3))
 
 # Create smooth terms table with the SAME column names
-s_table_richness <- data.frame(
-  Term = rownames(gam_sum_richness$s.table),
-  Estimate = round(gam_sum_richness$s.table[,1], 2),  # edf
-  Std_Error = round(gam_sum_richness$s.table[,2], 2),  # Ref.df
-  Statistic = round(gam_sum_richness$s.table[,3], 2),  # Chi.sq
-  P_value = gam_sum_richness$s.table[,4],
-  Significance = ifelse(gam_sum_richness$s.table[,4] < 0.001, "***",
+s_table_richness=data.frame(
+  Term=rownames(gam_sum_richness$s.table),
+  Estimate=round(gam_sum_richness$s.table[,1], 2),  # edf
+  Std_Error=round(gam_sum_richness$s.table[,2], 2),  # Ref.df
+  Statistic=round(gam_sum_richness$s.table[,3], 2),  # Chi.sq
+  P_value=gam_sum_richness$s.table[,4],
+  Significance=ifelse(gam_sum_richness$s.table[,4] < 0.001, "***",
                  ifelse(gam_sum_richness$s.table[,4] < 0.01, "**",
                  ifelse(gam_sum_richness$s.table[,4] < 0.05, "*",
                  ifelse(gam_sum_richness$s.table[,4] < 0.1, ".", "")))),
-  edf = round(gam_sum_richness$s.table[,1], 2),
-  Ref_df = round(gam_sum_richness$s.table[,2], 2),
-  Chi_sq = round(gam_sum_richness$s.table[,3], 2),
-  stringsAsFactors = FALSE
+  edf=round(gam_sum_richness$s.table[,1], 2),
+  Ref_df=round(gam_sum_richness$s.table[,2], 2),
+  Chi_sq=round(gam_sum_richness$s.table[,3], 2),
+  stringsAsFactors=FALSE
 )
 
 # Clean up P_value column for smooth terms
-s_table_richness$P_value <- ifelse(s_table_richness$P_value < 0.001, "<0.001",
+s_table_richness$P_value=ifelse(s_table_richness$P_value < 0.001, "<0.001",
                             round(s_table_richness$P_value, 3))
 
-gam_summarytable_richness <- rbind(
-  data.frame(Type = "Parametric", p_table_richness),
-  data.frame(Type = "Smooth", s_table_richness)
+gam_summarytable_richness=rbind(
+  data.frame(Type="Parametric", p_table_richness),
+  data.frame(Type="Smooth", s_table_richness)
 )
 
 # Add model fit statistics
-fit_stats_richness <- data.frame(
-  Type = "Model Fit",
-  Term = c("R-squared", "Deviance_explained", "REML_score", "n"),
-  Estimate = c(round(gam_sum_richness$r.sq, 3),
+fit_stats_richness=data.frame(
+  Type="Model Fit",
+  Term=c("R-squared", "Deviance_explained", "REML_score", "n"),
+  Estimate=c(round(gam_sum_richness$r.sq, 3),
                round(gam_sum_richness$dev.expl, 3),
                round(gam_sum_richness$sp.criterion, 1),
                gam_sum_richness$n),
-  Std_Error = NA,
-  Statistic = NA,
-  P_value = NA,
-  Significance = NA,
-  edf = NA,
-  Ref_df = NA,
-  Chi_sq = NA,
-  stringsAsFactors = FALSE
+  Std_Error=NA,
+  Statistic=NA,
+  P_value=NA,
+  Significance=NA,
+  edf=NA,
+  Ref_df=NA,
+  Chi_sq=NA,
+  stringsAsFactors=FALSE
 )
 
-gam_summarytable_richness <- rbind(gam_summarytable_richness, fit_stats_richness)
+gam_summarytable_richness=rbind(gam_summarytable_richness, fit_stats_richness)
 
 print(gam_summarytable_richness)
 
-write.csv(gam_summarytable_richness, file = file.path(paths$results_tables,"TABLE_GAMM_richness_results.csv"), row.names = FALSE, na = "")
+write.csv(gam_summarytable_richness, file=file.path(paths$results_tables,"TABLE_GAMM_richness_results.csv"), row.names=FALSE, na="")
 
 ##READS OUTPUT
 model_beta_reads_gam=readRDS(file=file.path(paths$results_rds,"GAMMmodel_reads.rds"))
-gam_sum_reads <- summary(model_beta_reads_gam)
+gam_sum_reads=summary(model_beta_reads_gam)
 # Create parametric coefficients table with consistent column names
-p_table <- data.frame(
-  Term = rownames(gam_sum_reads$p.table),
-  Estimate = round(gam_sum_reads$p.table[,1], 3),
-  Std_Error = round(gam_sum_reads$p.table[,2], 3),
-  Statistic = round(gam_sum_reads$p.table[,3], 2),
-  P_value = gam_sum_reads$p.table[,4],
-  Significance = ifelse(gam_sum_reads$p.table[,4] < 0.001, "***",
+p_table=data.frame(
+  Term=rownames(gam_sum_reads$p.table),
+  Estimate=round(gam_sum_reads$p.table[,1], 3),
+  Std_Error=round(gam_sum_reads$p.table[,2], 3),
+  Statistic=round(gam_sum_reads$p.table[,3], 2),
+  P_value=gam_sum_reads$p.table[,4],
+  Significance=ifelse(gam_sum_reads$p.table[,4] < 0.001, "***",
                  ifelse(gam_sum_reads$p.table[,4] < 0.01, "**",
                  ifelse(gam_sum_reads$p.table[,4] < 0.05, "*",
                  ifelse(gam_sum_reads$p.table[,4] < 0.1, ".", "")))),
-  edf = NA,
-  Ref_df = NA,
-  Chi_sq = NA,
-  stringsAsFactors = FALSE
+  edf=NA,
+  Ref_df=NA,
+  Chi_sq=NA,
+  stringsAsFactors=FALSE
 )
 
 # Clean up P_value column
-p_table$P_value <- ifelse(p_table$P_value < 0.001, "<0.001",
+p_table$P_value=ifelse(p_table$P_value < 0.001, "<0.001",
                    round(p_table$P_value, 3))
 
 # Create smooth terms table with the SAME column names
-s_table <- data.frame(
-  Term = rownames(gam_sum_reads$s.table),
-  Estimate = round(gam_sum_reads$s.table[,1], 2),  # edf
-  Std_Error = round(gam_sum_reads$s.table[,2], 2),  # Ref.df
-  Statistic = round(gam_sum_reads$s.table[,3], 2),  # Chi.sq
-  P_value = gam_sum_reads$s.table[,4],
-  Significance = ifelse(gam_sum_reads$s.table[,4] < 0.001, "***",
+s_table=data.frame(
+  Term=rownames(gam_sum_reads$s.table),
+  Estimate=round(gam_sum_reads$s.table[,1], 2),  # edf
+  Std_Error=round(gam_sum_reads$s.table[,2], 2),  # Ref.df
+  Statistic=round(gam_sum_reads$s.table[,3], 2),  # Chi.sq
+  P_value=gam_sum_reads$s.table[,4],
+  Significance=ifelse(gam_sum_reads$s.table[,4] < 0.001, "***",
                  ifelse(gam_sum_reads$s.table[,4] < 0.01, "**",
                  ifelse(gam_sum_reads$s.table[,4] < 0.05, "*",
                  ifelse(gam_sum_reads$s.table[,4] < 0.1, ".", "")))),
-  edf = round(gam_sum_reads$s.table[,1], 2),
-  Ref_df = round(gam_sum_reads$s.table[,2], 2),
-  Chi_sq = round(gam_sum_reads$s.table[,3], 2),
-  stringsAsFactors = FALSE
+  edf=round(gam_sum_reads$s.table[,1], 2),
+  Ref_df=round(gam_sum_reads$s.table[,2], 2),
+  Chi_sq=round(gam_sum_reads$s.table[,3], 2),
+  stringsAsFactors=FALSE
 )
 
 # Clean up P_value column for smooth terms
-s_table$P_value <- ifelse(s_table$P_value < 0.001, "<0.001",
+s_table$P_value=ifelse(s_table$P_value < 0.001, "<0.001",
                    round(s_table$P_value, 3))
 
-gam_summarytable_reads <- rbind(
-  data.frame(Type = "Parametric", p_table),
-  data.frame(Type = "Smooth", s_table)
+gam_summarytable_reads=rbind(
+  data.frame(Type="Parametric", p_table),
+  data.frame(Type="Smooth", s_table)
 )
 
 # Add model fit statistics
-fit_stats <- data.frame(
-  Type = "Model Fit",
-  Term = c("R-squared", "Deviance_explained", "REML_score", "n"),
-  Estimate = c(round(gam_sum_reads$r.sq, 3),
+fit_stats=data.frame(
+  Type="Model Fit",
+  Term=c("R-squared", "Deviance_explained", "REML_score", "n"),
+  Estimate=c(round(gam_sum_reads$r.sq, 3),
                round(gam_sum_reads$dev.expl, 3),
                round(gam_sum_reads$sp.criterion, 1),
                gam_sum_reads$n),
-  Std_Error = NA,
-  Statistic = NA,
-  P_value = NA,
-  Significance = NA,
-  edf = NA,
-  Ref_df = NA,
-  Chi_sq = NA,
-  stringsAsFactors = FALSE
+  Std_Error=NA,
+  Statistic=NA,
+  P_value=NA,
+  Significance=NA,
+  edf=NA,
+  Ref_df=NA,
+  Chi_sq=NA,
+  stringsAsFactors=FALSE
 )
 
-gam_summarytable_reads <- rbind(gam_summarytable_reads, fit_stats)
+gam_summarytable_reads=rbind(gam_summarytable_reads, fit_stats)
 
 print(gam_summarytable_reads)
 
-write.csv(gam_summarytable_reads, file = file.path(paths$results_tables, "TABLE_GAMM_reads_results.csv"), row.names = FALSE, na = "")
+write.csv(gam_summarytable_reads, file=file.path(paths$results_tables, "TABLE_GAMM_reads_results.csv"), row.names=FALSE, na="")
 ```
 
 #### b. Generate predictor fits
 
 ```{r}
-predict_linear_gam <- function(model, predictor, model_label,
-                               ref_data, metadata = NULL,
-                               n_points = 500, color_line = "black", 
-                               linetype_line = "solid") {
+predict_linear_gam=function(model, predictor, model_label,
+                               ref_data, metadata=NULL,
+                               n_points=500, color_line="black", 
+                               linetype_line="solid") {
   
   # Realistic range for scaled predictor
-  pred_seq <- seq(min(ref_data[[predictor]], na.rm = TRUE),
-                  max(ref_data[[predictor]], na.rm = TRUE),
-                  length.out = n_points)
+  pred_seq=seq(min(ref_data[[predictor]], na.rm=TRUE),
+                  max(ref_data[[predictor]], na.rm=TRUE),
+                  length.out=n_points)
   
   # Get reference levels for factors
   if("SITE" %in% names(ref_data)) {
-    common_site <- names(sort(table(ref_data$SITE), decreasing = TRUE))[1]
+    common_site=names(sort(table(ref_data$SITE), decreasing=TRUE))[1]
   } else {
-    common_site <- NA
+    common_site=NA
   }
   
   if("MARKER" %in% names(ref_data)) {
-    common_marker <- names(sort(table(ref_data$MARKER), decreasing = TRUE))[1]
+    common_marker=names(sort(table(ref_data$MARKER), decreasing=TRUE))[1]
   } else {
-    common_marker <- NA
+    common_marker=NA
   }
   
   if("phylum" %in% names(ref_data)) {
-    common_phylum <- names(sort(table(ref_data$phylum), decreasing = TRUE))[1]
+    common_phylum=names(sort(table(ref_data$phylum), decreasing=TRUE))[1]
   } else {
-    common_phylum <- NA
+    common_phylum=NA
   }
   
   # Template newdata with fixed reference values
-  newdata <- data.frame(
-    SST_scaled = 0,
-    wind_scaled = 0,
-    wave_scaled = 0,
-    tide_scaled = 0,
-    degrees = 180,
-    MWD = 180,
-    WDIR = 180,
-    SEASON = factor("Dry", levels = levels(ref_data$SEASON)),
-    SITE = factor(common_site, levels = levels(ref_data$SITE)),
-    MARKER = factor(common_marker, levels = levels(ref_data$MARKER))
+  newdata=data.frame(
+    SST_scaled=0,
+    wind_scaled=0,
+    wave_scaled=0,
+    tide_scaled=0,
+    degrees=180,
+    MWD=180,
+    WDIR=180,
+    SEASON=factor("Dry", levels=levels(ref_data$SEASON)),
+    SITE=factor(common_site, levels=levels(ref_data$SITE)),
+    MARKER=factor(common_marker, levels=levels(ref_data$MARKER))
   )
   
   if("phylum" %in% names(ref_data)) {
-    newdata$phylum <- factor(common_phylum, levels = levels(ref_data$phylum))
+    newdata$phylum=factor(common_phylum, levels=levels(ref_data$phylum))
   }
   
-  newdata <- newdata[rep(1, n_points), ]
-  newdata[[predictor]] <- pred_seq
-  rownames(newdata) <- NULL
+  newdata=newdata[rep(1, n_points), ]
+  newdata[[predictor]]=pred_seq
+  rownames(newdata)=NULL
   
   # GAM predictions
-  pred_link <- tryCatch({
-    predict(model, newdata = newdata, type = "link", se.fit = TRUE)
-  }, error = function(e) {
-    predict(model, newdata = newdata, type = "link", se.fit = TRUE)
+  pred_link=tryCatch({
+    predict(model, newdata=newdata, type="link", se.fit=TRUE)
+  }, error=function(e) {
+    predict(model, newdata=newdata, type="link", se.fit=TRUE)
   })
   
   # Handle NA se.fit
   if(any(is.na(pred_link$se.fit))) {
-    valid_se <- pred_link$se.fit[!is.na(pred_link$se.fit)]
+    valid_se=pred_link$se.fit[!is.na(pred_link$se.fit)]
     if(length(valid_se) > 0) {
-      mean_se <- mean(valid_se)
+      mean_se=mean(valid_se)
     } else {
-      mean_se <- 0.1
+      mean_se=0.1
     }
-    pred_link$se.fit[is.na(pred_link$se.fit)] <- mean_se
+    pred_link$se.fit[is.na(pred_link$se.fit)]=mean_se
   }
   
   # Direct calculation
-  newdata$fit <- plogis(pred_link$fit)
-  newdata$lower <- plogis(pred_link$fit - 1.96 * pred_link$se.fit)
-  newdata$upper <- plogis(pred_link$fit + 1.96 * pred_link$se.fit)
-  newdata$model <- model_label
-  newdata$color_line <- color_line
-  newdata$linetype_line <- linetype_line
+  newdata$fit=plogis(pred_link$fit)
+  newdata$lower=plogis(pred_link$fit - 1.96 * pred_link$se.fit)
+  newdata$upper=plogis(pred_link$fit + 1.96 * pred_link$se.fit)
+  newdata$model=model_label
+  newdata$color_line=color_line
+  newdata$linetype_line=linetype_line
   
   # Back-transform scaling to original units
-  scaling_info <- list(
-    SST_scaled = list(orig = "SST", mean = mean(ref_data$SST, na.rm=TRUE), sd = sd(ref_data$SST, na.rm=TRUE)),
-    wind_scaled = list(orig = "WSPD", mean = mean(ref_data$WSPD, na.rm=TRUE), sd = sd(ref_data$WSPD, na.rm=TRUE)),
-    wave_scaled = list(orig = "WVHT", mean = mean(ref_data$WVHT, na.rm=TRUE), sd = sd(ref_data$WVHT, na.rm=TRUE)),
-    tide_scaled = list(orig = "tide_height_m", mean = mean(ref_data$tide_height_m, na.rm=TRUE), sd = sd(ref_data$tide_height_m, na.rm=TRUE))
+  scaling_info=list(
+    SST_scaled=list(orig="SST", mean=mean(ref_data$SST, na.rm=TRUE), sd=sd(ref_data$SST, na.rm=TRUE)),
+    wind_scaled=list(orig="WSPD", mean=mean(ref_data$WSPD, na.rm=TRUE), sd=sd(ref_data$WSPD, na.rm=TRUE)),
+    wave_scaled=list(orig="WVHT", mean=mean(ref_data$WVHT, na.rm=TRUE), sd=sd(ref_data$WVHT, na.rm=TRUE)),
+    tide_scaled=list(orig="tide_height_m", mean=mean(ref_data$tide_height_m, na.rm=TRUE), sd=sd(ref_data$tide_height_m, na.rm=TRUE))
   )
   
   if(predictor %in% names(scaling_info)) {
-    newdata[[paste0(predictor, "_orig")]] <- 
+    newdata[[paste0(predictor, "_orig")]]=
       newdata[[predictor]] * scaling_info[[predictor]]$sd + scaling_info[[predictor]]$mean
   } else {
-    newdata[[paste0(predictor, "_orig")]] <- newdata[[predictor]]
+    newdata[[paste0(predictor, "_orig")]]=newdata[[predictor]]
   }
   
   # Observed data for histogram
-  obs_data <- NULL
+  obs_data=NULL
   if(!is.null(metadata) & predictor %in% names(scaling_info)) {
-    obs_var <- scaling_info[[predictor]]$orig
-    obs_data <- metadata %>%
+    obs_var=scaling_info[[predictor]]$orig
+    obs_data=metadata %>%
       dplyr::select(dplyr::all_of(obs_var)) %>%
-      dplyr::rename(obs_value = dplyr::all_of(obs_var)) %>%
+      dplyr::rename(obs_value=dplyr::all_of(obs_var)) %>%
       dplyr::filter(!is.na(obs_value))
   }
   
-  return(list(predictions = newdata, observed = obs_data))
+  return(list(predictions=newdata, observed=obs_data))
 }
 
-predict_cyclic_gam <- function(model, predictor, model_label,
-                               ref_data, metadata = NULL, obs_var = NULL,
-                               n_points = 500, color_line = "black", 
-                               linetype_line = "solid", polar = FALSE) {
+predict_cyclic_gam=function(model, predictor, model_label,
+                               ref_data, metadata=NULL, obs_var=NULL,
+                               n_points=500, color_line="black", 
+                               linetype_line="solid", polar=FALSE) {
   
   # Sequence for cyclic predictor (0 to 360 degrees)
-  angle_seq <- seq(0, 360, length.out = n_points)
+  angle_seq=seq(0, 360, length.out=n_points)
   
   # Get reference levels for factors
   if("SITE" %in% names(ref_data)) {
-    common_site <- names(sort(table(ref_data$SITE), decreasing = TRUE))[1]
+    common_site=names(sort(table(ref_data$SITE), decreasing=TRUE))[1]
   } else {
-    common_site <- NA
+    common_site=NA
   }
   
   if("MARKER" %in% names(ref_data)) {
-    common_marker <- names(sort(table(ref_data$MARKER), decreasing = TRUE))[1]
+    common_marker=names(sort(table(ref_data$MARKER), decreasing=TRUE))[1]
   } else {
-    common_marker <- NA
+    common_marker=NA
   }
   
   if("phylum" %in% names(ref_data)) {
-    common_phylum <- names(sort(table(ref_data$phylum), decreasing = TRUE))[1]
+    common_phylum=names(sort(table(ref_data$phylum), decreasing=TRUE))[1]
   } else {
-    common_phylum <- NA
+    common_phylum=NA
   }
   
   # Template newdata
-  newdata <- data.frame(
-    SST_scaled = 0,
-    wind_scaled = 0,
-    wave_scaled = 0,
-    tide_scaled = 0,
-    degrees = 180,
-    MWD = 180,
-    WDIR = 180,
-    SEASON = factor("Dry", levels = levels(ref_data$SEASON)),
-    SITE = factor(common_site, levels = levels(ref_data$SITE)),
-    MARKER = factor(common_marker, levels = levels(ref_data$MARKER))
+  newdata=data.frame(
+    SST_scaled=0,
+    wind_scaled=0,
+    wave_scaled=0,
+    tide_scaled=0,
+    degrees=180,
+    MWD=180,
+    WDIR=180,
+    SEASON=factor("Dry", levels=levels(ref_data$SEASON)),
+    SITE=factor(common_site, levels=levels(ref_data$SITE)),
+    MARKER=factor(common_marker, levels=levels(ref_data$MARKER))
   )
   
   if("phylum" %in% names(ref_data)) {
-    newdata$phylum <- factor(common_phylum, levels = levels(ref_data$phylum))
+    newdata$phylum=factor(common_phylum, levels=levels(ref_data$phylum))
   }
   
-  newdata <- newdata[rep(1, n_points), ]
-  rownames(newdata) <- NULL
+  newdata=newdata[rep(1, n_points), ]
+  rownames(newdata)=NULL
   
   # Vary chosen cyclic predictor
   if(predictor == "WDIR") {
-    newdata$WDIR <- angle_seq
+    newdata$WDIR=angle_seq
   } else if(predictor == "MWD") {
-    newdata$MWD <- angle_seq
+    newdata$MWD=angle_seq
   } else if(predictor == "lunar") {
-    newdata$degrees <- angle_seq
+    newdata$degrees=angle_seq
   }
   
-  newdata$direction_deg <- angle_seq
+  newdata$direction_deg=angle_seq
   
   # GAM predictions
-  pred_link <- tryCatch({
-    predict(model, newdata = newdata, type = "link", se.fit = TRUE)
-  }, error = function(e) {
-    predict(model, newdata = newdata, type = "link", se.fit = TRUE)
+  pred_link=tryCatch({
+    predict(model, newdata=newdata, type="link", se.fit=TRUE)
+  }, error=function(e) {
+    predict(model, newdata=newdata, type="link", se.fit=TRUE)
   })
   
   # Handle NA se.fit
   if(any(is.na(pred_link$se.fit))) {
-    valid_se <- pred_link$se.fit[!is.na(pred_link$se.fit)]
+    valid_se=pred_link$se.fit[!is.na(pred_link$se.fit)]
     if(length(valid_se) > 0) {
-      mean_se <- mean(valid_se)
+      mean_se=mean(valid_se)
     } else {
-      mean_se <- 0.1
+      mean_se=0.1
     }
-    pred_link$se.fit[is.na(pred_link$se.fit)] <- mean_se
+    pred_link$se.fit[is.na(pred_link$se.fit)]=mean_se
   }
   
   # Direct calculation
-  newdata$fit <- plogis(pred_link$fit)
-  newdata$lower <- plogis(pred_link$fit - 1.96 * pred_link$se.fit)
-  newdata$upper <- plogis(pred_link$fit + 1.96 * pred_link$se.fit)
-  newdata$model <- model_label
-  newdata$color_line <- color_line
-  newdata$linetype_line <- linetype_line
+  newdata$fit=plogis(pred_link$fit)
+  newdata$lower=plogis(pred_link$fit - 1.96 * pred_link$se.fit)
+  newdata$upper=plogis(pred_link$fit + 1.96 * pred_link$se.fit)
+  newdata$model=model_label
+  newdata$color_line=color_line
+  newdata$linetype_line=linetype_line
   
   # Observed frequency overlay
-  obs_plot <- NULL
+  obs_plot=NULL
   if(!is.null(metadata) & !is.null(obs_var)) {
-    obs_plot <- metadata %>%
+    obs_plot=metadata %>%
       dplyr::select(dplyr::all_of(obs_var)) %>%
       dplyr::filter(!is.na(.data[[obs_var]])) %>%
-      dplyr::mutate(bin = cut(.data[[obs_var]], breaks = seq(0, 360, length.out = 51), include.lowest = TRUE)) %>%
+      dplyr::mutate(bin=cut(.data[[obs_var]], breaks=seq(0, 360, length.out=51), include.lowest=TRUE)) %>%
       dplyr::group_by(bin) %>%
-      dplyr::summarise(freq = dplyr::n()) %>%
-      dplyr::mutate(direction_deg = seq(0, 360, length.out = dplyr::n()+1)[-1],
-                    freq_scaled = freq / max(freq))
+      dplyr::summarise(freq=dplyr::n()) %>%
+      dplyr::mutate(direction_deg=seq(0, 360, length.out=dplyr::n()+1)[-1],
+                    freq_scaled=freq / max(freq))
   }
   
-  return(list(predictions = newdata, obs = obs_plot))
+  return(list(predictions=newdata, obs=obs_plot))
 }
 
-predict_categorical_gam <- function(model, predictor, model_label,
-                                    ref_data, color_line = "black", 
-                                    linetype_line = "solid") {
+predict_categorical_gam=function(model, predictor, model_label,
+                                    ref_data, color_line="black", 
+                                    linetype_line="solid") {
   
   # Get factor levels
-  pred_levels <- levels(ref_data[[predictor]])
+  pred_levels=levels(ref_data[[predictor]])
   
   # Get reference levels for other factors
   if("SITE" %in% names(ref_data)) {
-    common_site <- names(sort(table(ref_data$SITE), decreasing = TRUE))[1]
+    common_site=names(sort(table(ref_data$SITE), decreasing=TRUE))[1]
   } else {
-    common_site <- NA
+    common_site=NA
   }
   
   if("MARKER" %in% names(ref_data)) {
-    common_marker <- names(sort(table(ref_data$MARKER), decreasing = TRUE))[1]
+    common_marker=names(sort(table(ref_data$MARKER), decreasing=TRUE))[1]
   } else {
-    common_marker <- NA
+    common_marker=NA
   }
   
   if("phylum" %in% names(ref_data)) {
-    common_phylum <- names(sort(table(ref_data$phylum), decreasing = TRUE))[1]
+    common_phylum=names(sort(table(ref_data$phylum), decreasing=TRUE))[1]
   } else {
-    common_phylum <- NA
+    common_phylum=NA
   }
   
   # Template newdata
-  newdata <- data.frame(
-    SST_scaled = 0,
-    wind_scaled = 0,
-    wave_scaled = 0,
-    tide_scaled = 0,
-    degrees = 180,
-    MWD = 180,
-    WDIR = 180,
-    SEASON = factor(pred_levels[1], levels = pred_levels),
-    SITE = factor(common_site, levels = levels(ref_data$SITE)),
-    MARKER = factor(common_marker, levels = levels(ref_data$MARKER))
+  newdata=data.frame(
+    SST_scaled=0,
+    wind_scaled=0,
+    wave_scaled=0,
+    tide_scaled=0,
+    degrees=180,
+    MWD=180,
+    WDIR=180,
+    SEASON=factor(pred_levels[1], levels=pred_levels),
+    SITE=factor(common_site, levels=levels(ref_data$SITE)),
+    MARKER=factor(common_marker, levels=levels(ref_data$MARKER))
   )
   
   if("phylum" %in% names(ref_data)) {
-    newdata$phylum <- factor(common_phylum, levels = levels(ref_data$phylum))
+    newdata$phylum=factor(common_phylum, levels=levels(ref_data$phylum))
   }
   
-  newdata <- newdata[rep(1, length(pred_levels)), ]
-  newdata[[predictor]] <- factor(pred_levels, levels = pred_levels)
-  rownames(newdata) <- NULL
+  newdata=newdata[rep(1, length(pred_levels)), ]
+  newdata[[predictor]]=factor(pred_levels, levels=pred_levels)
+  rownames(newdata)=NULL
   
   # GAM predictions
-  pred_link <- tryCatch({
-    predict(model, newdata = newdata, type = "link", se.fit = TRUE)
-  }, error = function(e) {
-    predict(model, newdata = newdata, type = "link", se.fit = TRUE)
+  pred_link=tryCatch({
+    predict(model, newdata=newdata, type="link", se.fit=TRUE)
+  }, error=function(e) {
+    predict(model, newdata=newdata, type="link", se.fit=TRUE)
   })
   
   # Handle NA se.fit
   if(any(is.na(pred_link$se.fit))) {
-    valid_se <- pred_link$se.fit[!is.na(pred_link$se.fit)]
+    valid_se=pred_link$se.fit[!is.na(pred_link$se.fit)]
     if(length(valid_se) > 0) {
-      mean_se <- mean(valid_se)
+      mean_se=mean(valid_se)
     } else {
-      mean_se <- 0.1
+      mean_se=0.1
     }
-    pred_link$se.fit[is.na(pred_link$se.fit)] <- mean_se
+    pred_link$se.fit[is.na(pred_link$se.fit)]=mean_se
   }
   
   # Direct calculation
-  newdata$fit <- plogis(pred_link$fit)
-  newdata$lower <- plogis(pred_link$fit - 1.96 * pred_link$se.fit)
-  newdata$upper <- plogis(pred_link$fit + 1.96 * pred_link$se.fit)
-  newdata$model <- model_label
-  newdata$color_line <- color_line
-  newdata$linetype_line <- linetype_line
+  newdata$fit=plogis(pred_link$fit)
+  newdata$lower=plogis(pred_link$fit - 1.96 * pred_link$se.fit)
+  newdata$upper=plogis(pred_link$fit + 1.96 * pred_link$se.fit)
+  newdata$model=model_label
+  newdata$color_line=color_line
+  newdata$linetype_line=linetype_line
   
   # Add numeric version for plotting
-  newdata$SEASON_orig <- as.numeric(newdata$SEASON)
+  newdata$SEASON_orig=as.numeric(newdata$SEASON)
   
   return(newdata)
 }
 
 # Wind direction
-pred_wdir_rich_gam <- predict_cyclic_gam(
-  model = model_beta_gam,
-  predictor = "WDIR",
-  model_label = "Detected richness",
-  ref_data = alpha.mod,
-  metadata = alpha.mod,
-  obs_var = "WDIR",
-  color_line = "#1985a1",
-  linetype_line = "dashed"
+pred_wdir_rich_gam=predict_cyclic_gam(
+  model=model_beta_gam,
+  predictor="WDIR",
+  model_label="Detected richness",
+  ref_data=alpha.mod,
+  metadata=alpha.mod,
+  obs_var="WDIR",
+  color_line="#1985a1",
+  linetype_line="dashed"
 )
 
-pred_wdir_edna_gam <- predict_cyclic_gam(
-  model = model_beta_reads_gam,
-  predictor = "WDIR",
-  model_label = "eDNA index",
-  ref_data = phylum_counts,
-  metadata = phylum_counts,
-  obs_var = "WDIR",
-  color_line = "#1985a1",
-  linetype_line = "solid"
+pred_wdir_edna_gam=predict_cyclic_gam(
+  model=model_beta_reads_gam,
+  predictor="WDIR",
+  model_label="eDNA index",
+  ref_data=phylum_counts,
+  metadata=phylum_counts,
+  obs_var="WDIR",
+  color_line="#1985a1",
+  linetype_line="solid"
 )
 
 # Wave direction
-pred_mwd_rich_gam <- predict_cyclic_gam(
-  model = model_beta_gam,
-  predictor = "MWD",
-  model_label = "Detected richness",
-  ref_data = alpha.mod,
-  metadata = alpha.mod,
-  obs_var = "MWD",
-  color_line = "black",
-  linetype_line = "dashed"
+pred_mwd_rich_gam=predict_cyclic_gam(
+  model=model_beta_gam,
+  predictor="MWD",
+  model_label="Detected richness",
+  ref_data=alpha.mod,
+  metadata=alpha.mod,
+  obs_var="MWD",
+  color_line="black",
+  linetype_line="dashed"
 )
 
-pred_mwd_edna_gam <- predict_cyclic_gam(
-  model = model_beta_reads_gam,
-  predictor = "MWD",
-  model_label = "eDNA index",
-  ref_data = phylum_counts,
-  metadata = phylum_counts,
-  obs_var = "MWD",
-  color_line = "#1985a1",
-  linetype_line = "solid"
+pred_mwd_edna_gam=predict_cyclic_gam(
+  model=model_beta_reads_gam,
+  predictor="MWD",
+  model_label="eDNA index",
+  ref_data=phylum_counts,
+  metadata=phylum_counts,
+  obs_var="MWD",
+  color_line="#1985a1",
+  linetype_line="solid"
 )
 
 # Lunar angle
-pred_lunar_rich_gam <- predict_cyclic_gam(
-  model = model_beta_gam,
-  predictor = "lunar",
-  model_label = "Detected richness",
-  ref_data = alpha.mod,
-  metadata = alpha.mod,
-  obs_var = "degrees",
-  color_line = "#1985a1",
-  linetype_line = "dashed"
+pred_lunar_rich_gam=predict_cyclic_gam(
+  model=model_beta_gam,
+  predictor="lunar",
+  model_label="Detected richness",
+  ref_data=alpha.mod,
+  metadata=alpha.mod,
+  obs_var="degrees",
+  color_line="#1985a1",
+  linetype_line="dashed"
 )
 
-pred_lunar_edna_gam <- predict_cyclic_gam(
-  model = model_beta_reads_gam,
-  predictor = "lunar",
-  model_label = "eDNA index",
-  ref_data = phylum_counts,
-  metadata = phylum_counts,
-  obs_var = "degrees",
-  color_line = "black",
-  linetype_line = "solid"
+pred_lunar_edna_gam=predict_cyclic_gam(
+  model=model_beta_reads_gam,
+  predictor="lunar",
+  model_label="eDNA index",
+  ref_data=phylum_counts,
+  metadata=phylum_counts,
+  obs_var="degrees",
+  color_line="black",
+  linetype_line="solid"
 )
 
 # Scaled predictors
-scaled_predictors <- c("SST_scaled", "wind_scaled", "wave_scaled", "tide_scaled")
+scaled_predictors=c("SST_scaled", "wind_scaled", "wave_scaled", "tide_scaled")
 
-pred_scaled_rich_list <- list()
-pred_scaled_edna_list <- list()
+pred_scaled_rich_list=list()
+pred_scaled_edna_list=list()
 
 for(pred in scaled_predictors) {
-    pred_scaled_rich_list[[pred]] <- predict_linear_gam(
-    model = model_beta_gam,
-    predictor = pred,
-    model_label = "Detected richness",
-    ref_data = alpha.mod,
-    metadata = alpha.mod,
-    color_line = "#1985a1",
-    linetype_line = "dashed"
+    pred_scaled_rich_list[[pred]]=predict_linear_gam(
+    model=model_beta_gam,
+    predictor=pred,
+    model_label="Detected richness",
+    ref_data=alpha.mod,
+    metadata=alpha.mod,
+    color_line="#1985a1",
+    linetype_line="dashed"
   )
   
-  pred_scaled_edna_list[[pred]] <- predict_linear_gam(
-    model = model_beta_reads_gam,
-    predictor = pred,
-    model_label = "eDNA index",
-    ref_data = phylum_counts,
-    metadata = phylum_counts,
-    color_line = "black",
-    linetype_line = "solid"
+  pred_scaled_edna_list[[pred]]=predict_linear_gam(
+    model=model_beta_reads_gam,
+    predictor=pred,
+    model_label="eDNA index",
+    ref_data=phylum_counts,
+    metadata=phylum_counts,
+    color_line="black",
+    linetype_line="solid"
   )
 }
 
 # Season predictions
-pred_season_rich_gam <- predict_categorical_gam(
-  model = model_beta_gam,
-  predictor = "SEASON",
-  model_label = "Detected richness",
-  ref_data = alpha.mod,
-  color_line = "#1985a1",
-  linetype_line = "dashed"
+pred_season_rich_gam=predict_categorical_gam(
+  model=model_beta_gam,
+  predictor="SEASON",
+  model_label="Detected richness",
+  ref_data=alpha.mod,
+  color_line="#1985a1",
+  linetype_line="dashed"
 )
 
-pred_season_edna_gam <- predict_categorical_gam(
-  model = model_beta_reads_gam,
-  predictor = "SEASON",
-  model_label = "eDNA index",
-  ref_data = phylum_counts,
-  color_line = "black",
-  linetype_line = "solid"
+pred_season_edna_gam=predict_categorical_gam(
+  model=model_beta_reads_gam,
+  predictor="SEASON",
+  model_label="eDNA index",
+  ref_data=phylum_counts,
+  color_line="black",
+  linetype_line="solid"
 )
 ```
 
@@ -1270,18 +1270,18 @@ pred_season_edna_gam <- predict_categorical_gam(
 
 ```{r}
 # For Richness: find global min and max across ALL predictors
-all_richness_fits <- c()
+all_richness_fits=c()
 
 # Collect all Richness predictions from all predictors
 for(pred in scaled_predictors) {
-  all_richness_fits <- c(all_richness_fits, 
+  all_richness_fits=c(all_richness_fits, 
                          pred_scaled_rich_list[[pred]]$predictions$fit,
                          pred_scaled_rich_list[[pred]]$predictions$lower,
                          pred_scaled_rich_list[[pred]]$predictions$upper)
 }
 
 # Add cyclic predictors
-all_richness_fits <- c(all_richness_fits,
+all_richness_fits=c(all_richness_fits,
                        pred_wdir_rich_gam$predictions$fit,
                        pred_wdir_rich_gam$predictions$lower,
                        pred_wdir_rich_gam$predictions$upper,
@@ -1293,30 +1293,30 @@ all_richness_fits <- c(all_richness_fits,
                        pred_lunar_rich_gam$predictions$upper)
 
 # Add season
-all_richness_fits <- c(all_richness_fits,
+all_richness_fits=c(all_richness_fits,
                        pred_season_rich_gam$fit,
                        pred_season_rich_gam$lower,
                        pred_season_rich_gam$upper)
 
 # Calculate global Richness range
-global_richness_range <- range(all_richness_fits, na.rm = TRUE)
-global_richness_padding <- diff(global_richness_range) * 0.15
-global_richness_ylim <- c(max(0, global_richness_range[1] - global_richness_padding), 
+global_richness_range=range(all_richness_fits, na.rm=TRUE)
+global_richness_padding=diff(global_richness_range) * 0.15
+global_richness_ylim=c(max(0, global_richness_range[1] - global_richness_padding), 
                           min(1, global_richness_range[2] + global_richness_padding))
 
 # For eDNA Index: find global min and max across ALL predictors
-all_edna_fits <- c()
+all_edna_fits=c()
 
 # Collect all eDNA predictions from all predictors
 for(pred in scaled_predictors) {
-  all_edna_fits <- c(all_edna_fits, 
+  all_edna_fits=c(all_edna_fits, 
                      pred_scaled_edna_list[[pred]]$predictions$fit,
                      pred_scaled_edna_list[[pred]]$predictions$lower,
                      pred_scaled_edna_list[[pred]]$predictions$upper)
 }
 
 # Add cyclic predictors
-all_edna_fits <- c(all_edna_fits,
+all_edna_fits=c(all_edna_fits,
                    pred_wdir_edna_gam$predictions$fit,
                    pred_wdir_edna_gam$predictions$lower,
                    pred_wdir_edna_gam$predictions$upper,
@@ -1328,192 +1328,192 @@ all_edna_fits <- c(all_edna_fits,
                    pred_lunar_edna_gam$predictions$upper)
 
 # Add season
-all_edna_fits <- c(all_edna_fits,
+all_edna_fits=c(all_edna_fits,
                    pred_season_edna_gam$fit,
                    pred_season_edna_gam$lower,
                    pred_season_edna_gam$upper)
 
 # Calculate global eDNA range
-global_edna_range <- range(all_edna_fits, na.rm = TRUE)
-global_edna_padding <- diff(global_edna_range) * 0.15
-global_edna_ylim <- c(max(0, global_edna_range[1] - global_edna_padding), 
+global_edna_range=range(all_edna_fits, na.rm=TRUE)
+global_edna_padding=diff(global_edna_range) * 0.15
+global_edna_ylim=c(max(0, global_edna_range[1] - global_edna_padding), 
                       min(1, global_edna_range[2] + global_edna_padding))
 
 ## PLOTTING FUNCTIONS
 
-create_cyclic_combined_plot <- function(rich_pred, edna_pred, rich_obs, edna_obs, 
+create_cyclic_combined_plot=function(rich_pred, edna_pred, rich_obs, edna_obs, 
                                         predictor_name, x_label,
                                         global_richness_ylim, global_edna_ylim) {
   
   # Prepare data
-  rich_data <- rich_pred
-  edna_data <- edna_pred
+  rich_data=rich_pred
+  edna_data=edna_pred
   
-  rich_data$Response <- "Richness"
-  edna_data$Response <- "eDNA Index"
+  rich_data$Response="Richness"
+  edna_data$Response="eDNA Index"
   
   # Scale eDNA data to Richness scale for plotting
-  edna_data$fit_scaled <- scales::rescale(edna_data$fit, from = global_edna_ylim, to = global_richness_ylim)
-  edna_data$lower_scaled <- scales::rescale(edna_data$lower, from = global_edna_ylim, to = global_richness_ylim)
-  edna_data$upper_scaled <- scales::rescale(edna_data$upper, from = global_edna_ylim, to = global_richness_ylim)
+  edna_data$fit_scaled=scales::rescale(edna_data$fit, from=global_edna_ylim, to=global_richness_ylim)
+  edna_data$lower_scaled=scales::rescale(edna_data$lower, from=global_edna_ylim, to=global_richness_ylim)
+  edna_data$upper_scaled=scales::rescale(edna_data$upper, from=global_edna_ylim, to=global_richness_ylim)
   
   # Get observation data for histogram
-  obs_data <- rich_obs$obs
+  obs_data=rich_obs$obs
   if(is.null(obs_data) && !is.null(edna_obs$obs)) {
-    obs_data <- edna_obs$obs
+    obs_data=edna_obs$obs
   }
   
   # Create histogram data
   if(!is.null(obs_data)) {
-    raw_angles <- rep(obs_data$direction_deg, times = round(obs_data$freq_scaled * 100))
-    hist_obj <- hist(raw_angles, breaks = seq(0, 360, length.out = 36), plot = FALSE)
-    hist_df <- data.frame(
-      direction_deg = hist_obj$mids,
-      density = hist_obj$density,
-      norm_density = hist_obj$density / max(hist_obj$density)
+    raw_angles=rep(obs_data$direction_deg, times=round(obs_data$freq_scaled * 100))
+    hist_obj=hist(raw_angles, breaks=seq(0, 360, length.out=36), plot=FALSE)
+    hist_df=data.frame(
+      direction_deg=hist_obj$mids,
+      density=hist_obj$density,
+      norm_density=hist_obj$density / max(hist_obj$density)
     )
   } else {
-    hist_df <- data.frame(direction_deg = numeric(0), norm_density = numeric(0))
+    hist_df=data.frame(direction_deg=numeric(0), norm_density=numeric(0))
   }
   
   # Transformation function for secondary axis
-  trans_formula <- function(x) {
-    scales::rescale(x, from = global_richness_ylim, to = global_edna_ylim)
+  trans_formula=function(x) {
+    scales::rescale(x, from=global_richness_ylim, to=global_edna_ylim)
   }
   
   # Create plot
-  plot <- ggplot() +
+  plot=ggplot() +
     # Histogram
-    {if(nrow(hist_df) > 0) geom_bar(data = hist_df, 
-       aes(x = direction_deg, y = norm_density * (global_richness_ylim[2] - global_richness_ylim[1]) * 0.15 + global_richness_ylim[1]), 
-       stat = "identity", fill = "tan", alpha = 0.25, width = 10)} +
+    {if(nrow(hist_df) > 0) geom_bar(data=hist_df, 
+       aes(x=direction_deg, y=norm_density * (global_richness_ylim[2] - global_richness_ylim[1]) * 0.15 + global_richness_ylim[1]), 
+       stat="identity", fill="tan", alpha=0.25, width=10)} +
     # Richness
-    geom_ribbon(data = rich_data,
-                aes(x = direction_deg, ymin = lower, ymax = upper),
-                fill = "#1985a1", alpha = 0.3) +
-    geom_line(data = rich_data,
-              aes(x = direction_deg, y = fit, color = "Richness", linetype = "Richness"),
-              size = 1.2) +
+    geom_ribbon(data=rich_data,
+                aes(x=direction_deg, ymin=lower, ymax=upper),
+                fill="#1985a1", alpha=0.3) +
+    geom_line(data=rich_data,
+              aes(x=direction_deg, y=fit, color="Richness", linetype="Richness"),
+              size=1.2) +
     # eDNA (rescaled)
-    geom_ribbon(data = edna_data,
-                aes(x = direction_deg, ymin = lower_scaled, ymax = upper_scaled),
-                fill = "black", alpha = 0.3) +
-    geom_line(data = edna_data,
-              aes(x = direction_deg, y = fit_scaled, color = "eDNA Index", linetype = "eDNA Index"),
-              size = 1.2) +
+    geom_ribbon(data=edna_data,
+                aes(x=direction_deg, ymin=lower_scaled, ymax=upper_scaled),
+                fill="black", alpha=0.3) +
+    geom_line(data=edna_data,
+              aes(x=direction_deg, y=fit_scaled, color="eDNA Index", linetype="eDNA Index"),
+              size=1.2) +
     scale_y_continuous(
-      name = "Predicted Richness",
-      limits = global_richness_ylim,
-      labels = scales::number_format(accuracy = 0.01),
-      sec.axis = sec_axis(
+      name="Predicted Richness",
+      limits=global_richness_ylim,
+      labels=scales::number_format(accuracy=0.01),
+      sec.axis=sec_axis(
         ~ trans_formula(.),
-        name = "Predicted eDNA Index",
-        labels = scales::number_format(accuracy = 0.001)
+        name="Predicted eDNA Index",
+        labels=scales::number_format(accuracy=0.001)
       )
     ) +
-    scale_color_manual(values = c("Richness" = "#1985a1", "eDNA Index" = "black")) +
-    scale_linetype_manual(values = c("Richness" = "dashed", "eDNA Index" = "solid")) +
-    labs(x = x_label, 
-         y = NULL,
-         color = "Response", 
-         linetype = "Response") +
+    scale_color_manual(values=c("Richness"="#1985a1", "eDNA Index"="black")) +
+    scale_linetype_manual(values=c("Richness"="dashed", "eDNA Index"="solid")) +
+    labs(x=x_label, 
+         y=NULL,
+         color="Response", 
+         linetype="Response") +
     My_Theme +
     theme(
-      legend.position = "bottom",
-      axis.title.y.left = element_text(color = "#1985a1", face = "bold"),
-      axis.text.y.left = element_text(color = "#1985a1"),
-      axis.title.y.right = element_text(color = "black", face = "bold"),
-      axis.text.y.right = element_text(color = "black")
+      legend.position="bottom",
+      axis.title.y.left=element_text(color="#1985a1", face="bold"),
+      axis.text.y.left=element_text(color="#1985a1"),
+      axis.title.y.right=element_text(color="black", face="bold"),
+      axis.text.y.right=element_text(color="black")
     )
   
   return(plot)
 }
 
-create_scaled_combined_plot <- function(rich_pred_list, edna_pred_list, 
+create_scaled_combined_plot=function(rich_pred_list, edna_pred_list, 
                                         rich_obs_list, edna_obs_list,
                                         predictor_name, x_label, predictor_key,
                                         global_richness_ylim, global_edna_ylim) {
   
   # Extract predictions
-  rich_pred <- rich_pred_list[[predictor_key]]$predictions
-  edna_pred <- edna_pred_list[[predictor_key]]$predictions
+  rich_pred=rich_pred_list[[predictor_key]]$predictions
+  edna_pred=edna_pred_list[[predictor_key]]$predictions
   
   # Get observed data
-  rich_obs <- rich_obs_list[[predictor_key]]$observed
-  edna_obs <- edna_obs_list[[predictor_key]]$observed
+  rich_obs=rich_obs_list[[predictor_key]]$observed
+  edna_obs=edna_obs_list[[predictor_key]]$observed
   
   # Get the original scale column name
-  orig_col <- paste0(predictor_key, "_orig")
+  orig_col=paste0(predictor_key, "_orig")
   
   # Scale eDNA data to Richness scale
-  edna_pred$fit_scaled <- scales::rescale(edna_pred$fit, from = global_edna_ylim, to = global_richness_ylim)
-  edna_pred$lower_scaled <- scales::rescale(edna_pred$lower, from = global_edna_ylim, to = global_richness_ylim)
-  edna_pred$upper_scaled <- scales::rescale(edna_pred$upper, from = global_edna_ylim, to = global_richness_ylim)
+  edna_pred$fit_scaled=scales::rescale(edna_pred$fit, from=global_edna_ylim, to=global_richness_ylim)
+  edna_pred$lower_scaled=scales::rescale(edna_pred$lower, from=global_edna_ylim, to=global_richness_ylim)
+  edna_pred$upper_scaled=scales::rescale(edna_pred$upper, from=global_edna_ylim, to=global_richness_ylim)
   
   # Get observation data for histogram
-  obs_data <- rich_obs
-  if(is.null(obs_data)) obs_data <- edna_obs
+  obs_data=rich_obs
+  if(is.null(obs_data)) obs_data=edna_obs
   
   # Create normalized histogram
   if(!is.null(obs_data) && nrow(obs_data) > 0) {
-    hist_obj <- hist(obs_data$obs_value, breaks = 30, plot = FALSE)
-    hist_df <- data.frame(
-      x_value = hist_obj$mids,
-      density = hist_obj$density,
-      norm_density = hist_obj$density / max(hist_obj$density)
+    hist_obj=hist(obs_data$obs_value, breaks=30, plot=FALSE)
+    hist_df=data.frame(
+      x_value=hist_obj$mids,
+      density=hist_obj$density,
+      norm_density=hist_obj$density / max(hist_obj$density)
     )
   } else {
-    hist_df <- data.frame(x_value = numeric(0), norm_density = numeric(0))
+    hist_df=data.frame(x_value=numeric(0), norm_density=numeric(0))
   }
   
   # Transformation function for secondary axis
-  trans_formula <- function(x) {
-    scales::rescale(x, from = global_richness_ylim, to = global_edna_ylim)
+  trans_formula=function(x) {
+    scales::rescale(x, from=global_richness_ylim, to=global_edna_ylim)
   }
   
   # Create plot
-  plot <- ggplot() +
+  plot=ggplot() +
     # Histogram
-    {if(nrow(hist_df) > 0) geom_bar(data = hist_df, 
-       aes(x = x_value, y = norm_density * (global_richness_ylim[2] - global_richness_ylim[1]) * 0.15 + global_richness_ylim[1]), 
-       stat = "identity", fill = "tan", alpha = 0.25, width = diff(hist_df$x_value)[1] * 0.9)} +
+    {if(nrow(hist_df) > 0) geom_bar(data=hist_df, 
+       aes(x=x_value, y=norm_density * (global_richness_ylim[2] - global_richness_ylim[1]) * 0.15 + global_richness_ylim[1]), 
+       stat="identity", fill="tan", alpha=0.25, width=diff(hist_df$x_value)[1] * 0.9)} +
     # Richness
-    geom_ribbon(data = rich_pred,
-                aes(x = .data[[orig_col]], ymin = lower, ymax = upper),
-                fill = "#1985a1", alpha = 0.3) +
-    geom_line(data = rich_pred,
-              aes(x = .data[[orig_col]], y = fit, color = "Richness", linetype = "Richness"),
-              size = 1.2) +
+    geom_ribbon(data=rich_pred,
+                aes(x=.data[[orig_col]], ymin=lower, ymax=upper),
+                fill="#1985a1", alpha=0.3) +
+    geom_line(data=rich_pred,
+              aes(x=.data[[orig_col]], y=fit, color="Richness", linetype="Richness"),
+              size=1.2) +
     # eDNA (rescaled)
-    geom_ribbon(data = edna_pred,
-                aes(x = .data[[orig_col]], ymin = lower_scaled, ymax = upper_scaled),
-                fill = "black", alpha = 0.3) +
-    geom_line(data = edna_pred,
-              aes(x = .data[[orig_col]], y = fit_scaled, color = "eDNA Index", linetype = "eDNA Index"),
-              size = 1.2) +
+    geom_ribbon(data=edna_pred,
+                aes(x=.data[[orig_col]], ymin=lower_scaled, ymax=upper_scaled),
+                fill="black", alpha=0.3) +
+    geom_line(data=edna_pred,
+              aes(x=.data[[orig_col]], y=fit_scaled, color="eDNA Index", linetype="eDNA Index"),
+              size=1.2) +
     scale_y_continuous(
-      name = "Predicted Richness",
-      limits = global_richness_ylim,
-      labels = scales::number_format(accuracy = 0.01),
-      sec.axis = sec_axis(
+      name="Predicted Richness",
+      limits=global_richness_ylim,
+      labels=scales::number_format(accuracy=0.01),
+      sec.axis=sec_axis(
         ~ trans_formula(.),
-        name = "Predicted eDNA Index",
-        labels = scales::number_format(accuracy = 0.001)
+        name="Predicted eDNA Index",
+        labels=scales::number_format(accuracy=0.001)
       )
     ) +
-    scale_color_manual(values = c("Richness" = "#1985a1", "eDNA Index" = "black")) +
-    scale_linetype_manual(values = c("Richness" = "dashed", "eDNA Index" = "solid")) +
-    labs(x = x_label, 
-         y = NULL,
-         color = "Response", 
-         linetype = "Response") +
+    scale_color_manual(values=c("Richness"="#1985a1", "eDNA Index"="black")) +
+    scale_linetype_manual(values=c("Richness"="dashed", "eDNA Index"="solid")) +
+    labs(x=x_label, 
+         y=NULL,
+         color="Response", 
+         linetype="Response") +
     My_Theme +
     theme(
-      legend.position = "bottom",
-      axis.title.y.left = element_text(color = "#1985a1", face = "bold"),
-      axis.text.y.left = element_text(color = "#1985a1"),
-      axis.title.y.right = element_text(color = "black", face = "bold"),
-      axis.text.y.right = element_text(color = "black")
+      legend.position="bottom",
+      axis.title.y.left=element_text(color="#1985a1", face="bold"),
+      axis.text.y.left=element_text(color="#1985a1"),
+      axis.title.y.right=element_text(color="black", face="bold"),
+      axis.text.y.right=element_text(color="black")
     )
   
   return(plot)
@@ -1521,7 +1521,7 @@ create_scaled_combined_plot <- function(rich_pred_list, edna_pred_list,
 
 
 # Cyclic predictors
-cyclic_wdir_plot <- create_cyclic_combined_plot(
+cyclic_wdir_plot=create_cyclic_combined_plot(
   pred_wdir_rich_gam$predictions, 
   pred_wdir_edna_gam$predictions,
   pred_wdir_rich_gam, 
@@ -1530,7 +1530,7 @@ cyclic_wdir_plot <- create_cyclic_combined_plot(
   global_richness_ylim, global_edna_ylim
 )
 
-cyclic_mwd_plot <- create_cyclic_combined_plot(
+cyclic_mwd_plot=create_cyclic_combined_plot(
   pred_mwd_rich_gam$predictions, 
   pred_mwd_edna_gam$predictions,
   pred_mwd_rich_gam, 
@@ -1539,7 +1539,7 @@ cyclic_mwd_plot <- create_cyclic_combined_plot(
   global_richness_ylim, global_edna_ylim
 )
 
-cyclic_lunar_plot <- create_cyclic_combined_plot(
+cyclic_lunar_plot=create_cyclic_combined_plot(
   pred_lunar_rich_gam$predictions, 
   pred_lunar_edna_gam$predictions,
   pred_lunar_rich_gam, 
@@ -1549,28 +1549,28 @@ cyclic_lunar_plot <- create_cyclic_combined_plot(
 )
 
 # Scaled predictors
-scaled_sst <- create_scaled_combined_plot(
+scaled_sst=create_scaled_combined_plot(
   pred_scaled_rich_list, pred_scaled_edna_list,
   pred_scaled_rich_list, pred_scaled_edna_list,
   "Sea Surface Temperature", "SST (°C)", "SST_scaled",
   global_richness_ylim, global_edna_ylim
 )
 
-scaled_wind <- create_scaled_combined_plot(
+scaled_wind=create_scaled_combined_plot(
   pred_scaled_rich_list, pred_scaled_edna_list,
   pred_scaled_rich_list, pred_scaled_edna_list,
   "Wind Speed", "Wind speed (m/s)", "wind_scaled",
   global_richness_ylim, global_edna_ylim
 )
 
-scaled_wave <- create_scaled_combined_plot(
+scaled_wave=create_scaled_combined_plot(
   pred_scaled_rich_list, pred_scaled_edna_list,
   pred_scaled_rich_list, pred_scaled_edna_list,
   "Wave Height", "Wave height (m)", "wave_scaled",
   global_richness_ylim, global_edna_ylim
 )
 
-scaled_tide <- create_scaled_combined_plot(
+scaled_tide=create_scaled_combined_plot(
   pred_scaled_rich_list, pred_scaled_edna_list,
   pred_scaled_rich_list, pred_scaled_edna_list,
   "Tide Height", "Tide height (m)", "tide_scaled",
@@ -1578,77 +1578,77 @@ scaled_tide <- create_scaled_combined_plot(
 )
 
 # Season plot
-season_rich <- pred_season_rich_gam
-season_edna <- pred_season_edna_gam
+season_rich=pred_season_rich_gam
+season_edna=pred_season_edna_gam
 
 # Scale eDNA to richness scale
-season_edna$fit_scaled <- scales::rescale(season_edna$fit, from = global_edna_ylim, to = global_richness_ylim)
-season_edna$lower_scaled <- scales::rescale(season_edna$lower, from = global_edna_ylim, to = global_richness_ylim)
-season_edna$upper_scaled <- scales::rescale(season_edna$upper, from = global_edna_ylim, to = global_richness_ylim)
+season_edna$fit_scaled=scales::rescale(season_edna$fit, from=global_edna_ylim, to=global_richness_ylim)
+season_edna$lower_scaled=scales::rescale(season_edna$lower, from=global_edna_ylim, to=global_richness_ylim)
+season_edna$upper_scaled=scales::rescale(season_edna$upper, from=global_edna_ylim, to=global_richness_ylim)
 
-season_rich$Response <- "Richness"
-season_edna$Response <- "eDNA Index"
+season_rich$Response="Richness"
+season_edna$Response="eDNA Index"
 
 # Transformation function for secondary axis
-trans_formula <- function(x) {
-  scales::rescale(x, from = global_richness_ylim, to = global_edna_ylim)
+trans_formula=function(x) {
+  scales::rescale(x, from=global_richness_ylim, to=global_edna_ylim)
 }
 
 # Create season plot with dual y-axes
-plot_season_combined <- ggplot() +
+plot_season_combined=ggplot() +
   # Richness points and error bars
-  geom_point(data = season_rich,
-             aes(x = SEASON, y = fit, shape = Response, color = Response),
-             position = position_dodge(width = 0.5), size = 3) +
-  geom_errorbar(data = season_rich,
-                aes(x = SEASON, ymin = lower, ymax = upper, linetype = Response),
-                position = position_dodge(width = 0.5), width = 0.2, size = 0.8) +
+  geom_point(data=season_rich,
+             aes(x=SEASON, y=fit, shape=Response, color=Response),
+             position=position_dodge(width=0.5), size=3) +
+  geom_errorbar(data=season_rich,
+                aes(x=SEASON, ymin=lower, ymax=upper, linetype=Response),
+                position=position_dodge(width=0.5), width=0.2, size=0.8) +
   # eDNA points and error bars (scaled to richness range)
-  geom_point(data = season_edna,
-             aes(x = SEASON, y = fit_scaled, shape = Response, color = Response),
-             position = position_dodge(width = 0.5), size = 3) +
-  geom_errorbar(data = season_edna,
-                aes(x = SEASON, ymin = lower_scaled, ymax = upper_scaled, linetype = Response),
-                position = position_dodge(width = 0.5), width = 0.2, size = 0.8) +
+  geom_point(data=season_edna,
+             aes(x=SEASON, y=fit_scaled, shape=Response, color=Response),
+             position=position_dodge(width=0.5), size=3) +
+  geom_errorbar(data=season_edna,
+                aes(x=SEASON, ymin=lower_scaled, ymax=upper_scaled, linetype=Response),
+                position=position_dodge(width=0.5), width=0.2, size=0.8) +
   scale_y_continuous(
-    name = "Predicted Richness",
-    limits = global_richness_ylim,
-    labels = scales::number_format(accuracy = 0.01),
-    sec.axis = sec_axis(
+    name="Predicted Richness",
+    limits=global_richness_ylim,
+    labels=scales::number_format(accuracy=0.01),
+    sec.axis=sec_axis(
       ~ trans_formula(.),
-      name = "Predicted eDNA Index",
-      labels = scales::number_format(accuracy = 0.001)
+      name="Predicted eDNA Index",
+      labels=scales::number_format(accuracy=0.001)
     )
   ) +
-  scale_color_manual(values = c("Richness" = "#1985a1", "eDNA Index" = "black")) +
-  scale_linetype_manual(values = c("Richness" = "dashed", "eDNA Index" = "solid")) +
-  scale_shape_manual(values = c("Richness" = 16, "eDNA Index" = 17)) +
-  labs(x = "Season", 
-       y = NULL) +
+  scale_color_manual(values=c("Richness"="#1985a1", "eDNA Index"="black")) +
+  scale_linetype_manual(values=c("Richness"="dashed", "eDNA Index"="solid")) +
+  scale_shape_manual(values=c("Richness"=16, "eDNA Index"=17)) +
+  labs(x="Season", 
+       y=NULL) +
   My_Theme +
   theme(
-    legend.position = "bottom",
-    axis.title.y.left = element_text(color = "#1985a1", face = "bold"),
-    axis.text.y.left = element_text(color = "#1985a1"),
-    axis.title.y.right = element_text(color = "black", face = "bold"),
-    axis.text.y.right = element_text(color = "black")
+    legend.position="bottom",
+    axis.title.y.left=element_text(color="#1985a1", face="bold"),
+    axis.text.y.left=element_text(color="#1985a1"),
+    axis.title.y.right=element_text(color="black", face="bold"),
+    axis.text.y.right=element_text(color="black")
   )
 
 
-GAM_scaled <- ggarrange(
+GAM_scaled=ggarrange(
   scaled_wind, cyclic_wdir_plot, 
   scaled_wave, cyclic_mwd_plot, 
   scaled_tide, cyclic_lunar_plot, 
   scaled_sst, plot_season_combined,
-  ncol = 4, nrow = 2,
-  common.legend = TRUE,
-  legend = "bottom",
-  labels = "auto"
+  ncol=4, nrow=2,
+  common.legend=TRUE,
+  legend="bottom",
+  labels="auto"
 )
 
 print(GAM_scaled)
 
-ggsave(filename = file.path(paths$results_figs, "FIGURE_4_GAM.pdf"), plot     = GAM_scaled, width= 11, height=8, units="in", device=cairo_pdf, family="Arial")
+ggsave(filename=file.path(paths$results_figs, "FIGURE_4_GAM.pdf"), plot    =GAM_scaled, width= 11, height=8, units="in", device=cairo_pdf, family="Arial")
 ```
 
 ### iii. Site-wise GAMMs
@@ -1656,7 +1656,7 @@ ggsave(filename = file.path(paths$results_figs, "FIGURE_4_GAM.pdf"), plot     = 
 #### a. Models
 
 ```{r}
-model_beta_gam_site <- mgcv::gam(
+model_beta_gam_site=mgcv::gam(
   prop2 ~ SEASON + MARKER + 
     s(SST_scaled, SITE, bs="fs", k=knots) +
     s(wind_scaled, SITE, bs="fs", k=knots) +
@@ -1665,10 +1665,10 @@ model_beta_gam_site <- mgcv::gam(
     s(degrees, SITE, bs="fs", k=knots, xt=list(bs="cc")) +
     s(MWD, SITE, bs="fs", k=knots, xt=list(bs="cc")) +
     s(WDIR, SITE, bs="fs", k=knots, xt=list(bs="cc")),
-  data = alpha.mod,
-  family = betar(link="logit"),
-  method = "REML",
-  select = TRUE
+  data=alpha.mod,
+  family=betar(link="logit"),
+  method="REML",
+  select=TRUE
 )
 saveRDS(model_beta_gam_site,file.path(paths$results_rds,"GAMMmodel_richness_site.rds"))
 model_beta_gam_site=readRDS(file.path(paths$results_rds,"GAMMmodel_richness_site.rds"))
@@ -1676,7 +1676,7 @@ summary(model_beta_gam_site)
 
 
 ### eDNA Index GAM
-model_beta_reads_gam_site <- mgcv::gam(
+model_beta_reads_gam_site=mgcv::gam(
   value2 ~ SEASON + MARKER +
     s(SST_scaled, SITE, bs="fs", k=knots) +
     s(wind_scaled, SITE, bs="fs", k=knots) +
@@ -1686,10 +1686,10 @@ model_beta_reads_gam_site <- mgcv::gam(
     s(MWD, SITE, bs="fs", k=knots, xt=list(bs="cc")) +
     s(WDIR, SITE, bs="fs", k=knots, xt=list(bs="cc")) +
     s(phylum, bs="re"),
-  data = phylum_counts,
-  family = betar(link="logit"),
-  method = "REML",
-  select = TRUE
+  data=phylum_counts,
+  family=betar(link="logit"),
+  method="REML",
+  select=TRUE
 )
 saveRDS(model_beta_reads_gam_site,file.path(paths$results_rds,"GAMMmodel_reads_site.rds"))
 model_beta_reads_gam_site=readRDS(file.path(paths$results_rds,"GAMMmodel_reads_site.rds"))
@@ -1700,346 +1700,346 @@ summary(model_beta_reads_gam_site)
 
 ```{r}
 # Function for linear predictors (SST, wind, wave, tide)
-predict_linear_gam_sitewise <- function(model, predictor, model_label,
-                               ref_data, metadata = NULL,
-                               n_points = 500) {
+predict_linear_gam_sitewise=function(model, predictor, model_label,
+                               ref_data, metadata=NULL,
+                               n_points=500) {
   
   # Realistic range for scaled predictor
-  pred_seq <- seq(min(ref_data[[predictor]], na.rm = TRUE),
-                  max(ref_data[[predictor]], na.rm = TRUE),
-                  length.out = n_points)
+  pred_seq=seq(min(ref_data[[predictor]], na.rm=TRUE),
+                  max(ref_data[[predictor]], na.rm=TRUE),
+                  length.out=n_points)
   
   # Get reference levels for factors
   if("MARKER" %in% names(ref_data)) {
-    common_marker <- names(sort(table(ref_data$MARKER), decreasing = TRUE))[1]
+    common_marker=names(sort(table(ref_data$MARKER), decreasing=TRUE))[1]
   } else {
-    common_marker <- NA
+    common_marker=NA
   }
   
   if("phylum" %in% names(ref_data)) {
-    common_phylum <- names(sort(table(ref_data$phylum), decreasing = TRUE))[1]
+    common_phylum=names(sort(table(ref_data$phylum), decreasing=TRUE))[1]
   } else {
-    common_phylum <- NA
+    common_phylum=NA
   }
   
   # Get all unique sites
-  all_sites <- unique(ref_data$SITE)
+  all_sites=unique(ref_data$SITE)
   
   # Create prediction data for all sites
-  newdata_list <- list()
+  newdata_list=list()
   
   for(site in all_sites) {
     # Template newdata for this site
-    newdata <- data.frame(
-      SST_scaled = 0,
-      wind_scaled = 0,
-      wave_scaled = 0,
-      tide_scaled = 0,
-      degrees = 180,
-      MWD = 180,
-      WDIR = 180,
-      SEASON = factor("Dry", levels = levels(ref_data$SEASON)),
-      SITE = factor(site, levels = levels(ref_data$SITE)),
-      MARKER = factor(common_marker, levels = levels(ref_data$MARKER))
+    newdata=data.frame(
+      SST_scaled=0,
+      wind_scaled=0,
+      wave_scaled=0,
+      tide_scaled=0,
+      degrees=180,
+      MWD=180,
+      WDIR=180,
+      SEASON=factor("Dry", levels=levels(ref_data$SEASON)),
+      SITE=factor(site, levels=levels(ref_data$SITE)),
+      MARKER=factor(common_marker, levels=levels(ref_data$MARKER))
     )
     
     if("phylum" %in% names(ref_data)) {
-      newdata$phylum <- factor(common_phylum, levels = levels(ref_data$phylum))
+      newdata$phylum=factor(common_phylum, levels=levels(ref_data$phylum))
     }
     
-    newdata <- newdata[rep(1, n_points), ]
-    newdata[[predictor]] <- pred_seq
-    rownames(newdata) <- NULL
-    newdata_list[[site]] <- newdata
+    newdata=newdata[rep(1, n_points), ]
+    newdata[[predictor]]=pred_seq
+    rownames(newdata)=NULL
+    newdata_list[[site]]=newdata
   }
   
   # Combine all sites
-  newdata_all <- bind_rows(newdata_list, .id = "SITE_site")
+  newdata_all=bind_rows(newdata_list, .id="SITE_site")
   
   # Predict for all sites 
-  pred_link <- predict(model, newdata = newdata_all, type = "link", se.fit = TRUE)
+  pred_link=predict(model, newdata=newdata_all, type="link", se.fit=TRUE)
   
   # Handle NA se.fit
   if(any(is.na(pred_link$se.fit))) {
-    valid_se <- pred_link$se.fit[!is.na(pred_link$se.fit)]
+    valid_se=pred_link$se.fit[!is.na(pred_link$se.fit)]
     if(length(valid_se) > 0) {
-      mean_se <- mean(valid_se)
+      mean_se=mean(valid_se)
     } else {
-      mean_se <- 0.1
+      mean_se=0.1
     }
-    pred_link$se.fit[is.na(pred_link$se.fit)] <- mean_se
+    pred_link$se.fit[is.na(pred_link$se.fit)]=mean_se
   }
   
   # Calculate predictions
-  newdata_all$fit <- plogis(pred_link$fit)
-  newdata_all$lower <- plogis(pred_link$fit - 1.96 * pred_link$se.fit)
-  newdata_all$upper <- plogis(pred_link$fit + 1.96 * pred_link$se.fit)
-  newdata_all$model <- model_label
+  newdata_all$fit=plogis(pred_link$fit)
+  newdata_all$lower=plogis(pred_link$fit - 1.96 * pred_link$se.fit)
+  newdata_all$upper=plogis(pred_link$fit + 1.96 * pred_link$se.fit)
+  newdata_all$model=model_label
   
   # Back-transform scaling to original units
-  scaling_info <- list(
-    SST_scaled = list(orig = "SST", mean = mean(ref_data$SST, na.rm=TRUE), sd = sd(ref_data$SST, na.rm=TRUE)),
-    wind_scaled = list(orig = "WSPD", mean = mean(ref_data$WSPD, na.rm=TRUE), sd = sd(ref_data$WSPD, na.rm=TRUE)),
-    wave_scaled = list(orig = "WVHT", mean = mean(ref_data$WVHT, na.rm=TRUE), sd = sd(ref_data$WVHT, na.rm=TRUE)),
-    tide_scaled = list(orig = "tide_height_m", mean = mean(ref_data$tide_height_m, na.rm=TRUE), sd = sd(ref_data$tide_height_m, na.rm=TRUE))
+  scaling_info=list(
+    SST_scaled=list(orig="SST", mean=mean(ref_data$SST, na.rm=TRUE), sd=sd(ref_data$SST, na.rm=TRUE)),
+    wind_scaled=list(orig="WSPD", mean=mean(ref_data$WSPD, na.rm=TRUE), sd=sd(ref_data$WSPD, na.rm=TRUE)),
+    wave_scaled=list(orig="WVHT", mean=mean(ref_data$WVHT, na.rm=TRUE), sd=sd(ref_data$WVHT, na.rm=TRUE)),
+    tide_scaled=list(orig="tide_height_m", mean=mean(ref_data$tide_height_m, na.rm=TRUE), sd=sd(ref_data$tide_height_m, na.rm=TRUE))
   )
   
   if(predictor %in% names(scaling_info)) {
-    newdata_all[[paste0(predictor, "_orig")]] <- 
+    newdata_all[[paste0(predictor, "_orig")]]=
       newdata_all[[predictor]] * scaling_info[[predictor]]$sd + scaling_info[[predictor]]$mean
   } else {
-    newdata_all[[paste0(predictor, "_orig")]] <- newdata_all[[predictor]]
+    newdata_all[[paste0(predictor, "_orig")]]=newdata_all[[predictor]]
   }
   
   return(newdata_all)
 }
 
 # Function for cyclic predictors (WDIR, MWD, lunar)
-predict_cyclic_gam_sitewise <- function(model, predictor, model_label,
-                               ref_data, metadata = NULL, obs_var = NULL,
-                               n_points = 500, polar = FALSE) {
+predict_cyclic_gam_sitewise=function(model, predictor, model_label,
+                               ref_data, metadata=NULL, obs_var=NULL,
+                               n_points=500, polar=FALSE) {
   
   # Sequence for cyclic predictor (0 to 360 degrees)
-  angle_seq <- seq(0, 360, length.out = n_points)
+  angle_seq=seq(0, 360, length.out=n_points)
   
   # Get reference levels for factors
   if("MARKER" %in% names(ref_data)) {
-    common_marker <- names(sort(table(ref_data$MARKER), decreasing = TRUE))[1]
+    common_marker=names(sort(table(ref_data$MARKER), decreasing=TRUE))[1]
   } else {
-    common_marker <- NA
+    common_marker=NA
   }
   
   if("phylum" %in% names(ref_data)) {
-    common_phylum <- names(sort(table(ref_data$phylum), decreasing = TRUE))[1]
+    common_phylum=names(sort(table(ref_data$phylum), decreasing=TRUE))[1]
   } else {
-    common_phylum <- NA
+    common_phylum=NA
   }
   
   # Get all unique sites
-  all_sites <- unique(ref_data$SITE)
+  all_sites=unique(ref_data$SITE)
   
   # Create prediction data for all sites
-  newdata_list <- list()
+  newdata_list=list()
   
   for(site in all_sites) {
     # Template newdata
-    newdata <- data.frame(
-      SST_scaled = 0,
-      wind_scaled = 0,
-      wave_scaled = 0,
-      tide_scaled = 0,
-      degrees = 180,
-      MWD = 180,
-      WDIR = 180,
-      SEASON = factor("Dry", levels = levels(ref_data$SEASON)),
-      SITE = factor(site, levels = levels(ref_data$SITE)),
-      MARKER = factor(common_marker, levels = levels(ref_data$MARKER))
+    newdata=data.frame(
+      SST_scaled=0,
+      wind_scaled=0,
+      wave_scaled=0,
+      tide_scaled=0,
+      degrees=180,
+      MWD=180,
+      WDIR=180,
+      SEASON=factor("Dry", levels=levels(ref_data$SEASON)),
+      SITE=factor(site, levels=levels(ref_data$SITE)),
+      MARKER=factor(common_marker, levels=levels(ref_data$MARKER))
     )
     
     if("phylum" %in% names(ref_data)) {
-      newdata$phylum <- factor(common_phylum, levels = levels(ref_data$phylum))
+      newdata$phylum=factor(common_phylum, levels=levels(ref_data$phylum))
     }
     
-    newdata <- newdata[rep(1, n_points), ]
-    rownames(newdata) <- NULL
+    newdata=newdata[rep(1, n_points), ]
+    rownames(newdata)=NULL
     
     # Vary chosen cyclic predictor
     if(predictor == "WDIR") {
-      newdata$WDIR <- angle_seq
+      newdata$WDIR=angle_seq
     } else if(predictor == "MWD") {
-      newdata$MWD <- angle_seq
+      newdata$MWD=angle_seq
     } else if(predictor == "lunar") {
-      newdata$degrees <- angle_seq
+      newdata$degrees=angle_seq
     }
     
-    newdata$direction_deg <- angle_seq
-    newdata_list[[site]] <- newdata
+    newdata$direction_deg=angle_seq
+    newdata_list[[site]]=newdata
   }
   
   # Combine all sites
-  newdata_all <- bind_rows(newdata_list, .id = "SITE_site")
+  newdata_all=bind_rows(newdata_list, .id="SITE_site")
   
   # Predict for all sites
-  pred_link <- predict(model, newdata = newdata_all, type = "link", se.fit = TRUE)
+  pred_link=predict(model, newdata=newdata_all, type="link", se.fit=TRUE)
   
   # Handle NA se.fit
   if(any(is.na(pred_link$se.fit))) {
-    valid_se <- pred_link$se.fit[!is.na(pred_link$se.fit)]
+    valid_se=pred_link$se.fit[!is.na(pred_link$se.fit)]
     if(length(valid_se) > 0) {
-      mean_se <- mean(valid_se)
+      mean_se=mean(valid_se)
     } else {
-      mean_se <- 0.1
+      mean_se=0.1
     }
-    pred_link$se.fit[is.na(pred_link$se.fit)] <- mean_se
+    pred_link$se.fit[is.na(pred_link$se.fit)]=mean_se
   }
   
   # Calculate predictions
-  newdata_all$fit <- plogis(pred_link$fit)
-  newdata_all$lower <- plogis(pred_link$fit - 1.96 * pred_link$se.fit)
-  newdata_all$upper <- plogis(pred_link$fit + 1.96 * pred_link$se.fit)
-  newdata_all$model <- model_label
+  newdata_all$fit=plogis(pred_link$fit)
+  newdata_all$lower=plogis(pred_link$fit - 1.96 * pred_link$se.fit)
+  newdata_all$upper=plogis(pred_link$fit + 1.96 * pred_link$se.fit)
+  newdata_all$model=model_label
   
   return(newdata_all)
 }
 
 # Function for categorical predictor (SEASON)
-predict_categorical_gam_sitewise <- function(model, predictor, model_label,
+predict_categorical_gam_sitewise=function(model, predictor, model_label,
                                     ref_data) {
   
   # Get factor levels
-  pred_levels <- levels(ref_data[[predictor]])
+  pred_levels=levels(ref_data[[predictor]])
   
   # Get reference levels for other factors
   if("MARKER" %in% names(ref_data)) {
-    common_marker <- names(sort(table(ref_data$MARKER), decreasing = TRUE))[1]
+    common_marker=names(sort(table(ref_data$MARKER), decreasing=TRUE))[1]
   } else {
-    common_marker <- NA
+    common_marker=NA
   }
   
   if("phylum" %in% names(ref_data)) {
-    common_phylum <- names(sort(table(ref_data$phylum), decreasing = TRUE))[1]
+    common_phylum=names(sort(table(ref_data$phylum), decreasing=TRUE))[1]
   } else {
-    common_phylum <- NA
+    common_phylum=NA
   }
   
   # Get all unique sites
-  all_sites <- unique(ref_data$SITE)
+  all_sites=unique(ref_data$SITE)
   
   # Create prediction data for all sites and seasons
-  newdata_list <- list()
+  newdata_list=list()
   
   for(site in all_sites) {
     for(season in pred_levels) {
-      newdata <- data.frame(
-        SST_scaled = 0,
-        wind_scaled = 0,
-        wave_scaled = 0,
-        tide_scaled = 0,
-        degrees = 180,
-        MWD = 180,
-        WDIR = 180,
-        SEASON = factor(season, levels = pred_levels),
-        SITE = factor(site, levels = levels(ref_data$SITE)),
-        MARKER = factor(common_marker, levels = levels(ref_data$MARKER))
+      newdata=data.frame(
+        SST_scaled=0,
+        wind_scaled=0,
+        wave_scaled=0,
+        tide_scaled=0,
+        degrees=180,
+        MWD=180,
+        WDIR=180,
+        SEASON=factor(season, levels=pred_levels),
+        SITE=factor(site, levels=levels(ref_data$SITE)),
+        MARKER=factor(common_marker, levels=levels(ref_data$MARKER))
       )
       
       if("phylum" %in% names(ref_data)) {
-        newdata$phylum <- factor(common_phylum, levels = levels(ref_data$phylum))
+        newdata$phylum=factor(common_phylum, levels=levels(ref_data$phylum))
       }
       
-      newdata_list[[paste(site, season)]] <- newdata
+      newdata_list[[paste(site, season)]]=newdata
     }
   }
   
   # Combine all
-  newdata_all <- bind_rows(newdata_list, .id = "id")
-  newdata_all$SITE_site <- gsub("_.*", "", newdata_all$id)
-  newdata_all$SEASON_val <- gsub(".*_", "", newdata_all$id)
+  newdata_all=bind_rows(newdata_list, .id="id")
+  newdata_all$SITE_site=gsub("_.*", "", newdata_all$id)
+  newdata_all$SEASON_val=gsub(".*_", "", newdata_all$id)
   
   # Predict
-  pred_link <- predict(model, newdata = newdata_all, type = "link", se.fit = TRUE)
+  pred_link=predict(model, newdata=newdata_all, type="link", se.fit=TRUE)
   
   # Handle NA se.fit
   if(any(is.na(pred_link$se.fit))) {
-    valid_se <- pred_link$se.fit[!is.na(pred_link$se.fit)]
+    valid_se=pred_link$se.fit[!is.na(pred_link$se.fit)]
     if(length(valid_se) > 0) {
-      mean_se <- mean(valid_se)
+      mean_se=mean(valid_se)
     } else {
-      mean_se <- 0.1
+      mean_se=0.1
     }
-    pred_link$se.fit[is.na(pred_link$se.fit)] <- mean_se
+    pred_link$se.fit[is.na(pred_link$se.fit)]=mean_se
   }
   
-  newdata_all$fit <- plogis(pred_link$fit)
-  newdata_all$lower <- plogis(pred_link$fit - 1.96 * pred_link$se.fit)
-  newdata_all$upper <- plogis(pred_link$fit + 1.96 * pred_link$se.fit)
-  newdata_all$model <- model_label
+  newdata_all$fit=plogis(pred_link$fit)
+  newdata_all$lower=plogis(pred_link$fit - 1.96 * pred_link$se.fit)
+  newdata_all$upper=plogis(pred_link$fit + 1.96 * pred_link$se.fit)
+  newdata_all$model=model_label
   
   return(newdata_all)
 }
 
 # Wind direction
-pred_wdir_rich_gam <- predict_cyclic_gam_sitewise(
-  model = model_beta_gam,
-  predictor = "WDIR",
-  model_label = "Detected richness",
-  ref_data = alpha.mod
+pred_wdir_rich_gam=predict_cyclic_gam_sitewise(
+  model=model_beta_gam,
+  predictor="WDIR",
+  model_label="Detected richness",
+  ref_data=alpha.mod
 )
 
-pred_wdir_edna_gam <- predict_cyclic_gam_sitewise(
-  model = model_beta_reads_gam,
-  predictor = "WDIR",
-  model_label = "eDNA index",
-  ref_data = phylum_counts
+pred_wdir_edna_gam=predict_cyclic_gam_sitewise(
+  model=model_beta_reads_gam,
+  predictor="WDIR",
+  model_label="eDNA index",
+  ref_data=phylum_counts
 )
 
 # Wave direction
-pred_mwd_rich_gam <- predict_cyclic_gam_sitewise(
-  model = model_beta_gam,
-  predictor = "MWD",
-  model_label = "Detected richness",
-  ref_data = alpha.mod
+pred_mwd_rich_gam=predict_cyclic_gam_sitewise(
+  model=model_beta_gam,
+  predictor="MWD",
+  model_label="Detected richness",
+  ref_data=alpha.mod
 )
 
-pred_mwd_edna_gam <- predict_cyclic_gam_sitewise(
-  model = model_beta_reads_gam,
-  predictor = "MWD",
-  model_label = "eDNA index",
-  ref_data = phylum_counts
+pred_mwd_edna_gam=predict_cyclic_gam_sitewise(
+  model=model_beta_reads_gam,
+  predictor="MWD",
+  model_label="eDNA index",
+  ref_data=phylum_counts
 )
 
 # Lunar angle
-pred_lunar_rich_gam <- predict_cyclic_gam_sitewise(
-  model = model_beta_gam,
-  predictor = "lunar",
-  model_label = "Detected richness",
-  ref_data = alpha.mod
+pred_lunar_rich_gam=predict_cyclic_gam_sitewise(
+  model=model_beta_gam,
+  predictor="lunar",
+  model_label="Detected richness",
+  ref_data=alpha.mod
 )
 
-pred_lunar_edna_gam <- predict_cyclic_gam_sitewise(
-  model = model_beta_reads_gam,
-  predictor = "lunar",
-  model_label = "eDNA index",
-  ref_data = phylum_counts
+pred_lunar_edna_gam=predict_cyclic_gam_sitewise(
+  model=model_beta_reads_gam,
+  predictor="lunar",
+  model_label="eDNA index",
+  ref_data=phylum_counts
 )
 
 # Scaled predictors
-scaled_predictors <- c("SST_scaled", "wind_scaled", "wave_scaled", "tide_scaled")
+scaled_predictors=c("SST_scaled", "wind_scaled", "wave_scaled", "tide_scaled")
 
-pred_scaled_rich_list <- list()
-pred_scaled_edna_list <- list()
+pred_scaled_rich_list=list()
+pred_scaled_edna_list=list()
 
 for(pred in scaled_predictors) {
   cat(sprintf("Generating predictions for %s...\n", pred))
   
-  pred_scaled_rich_list[[pred]] <- predict_linear_gam_sitewise(
-    model = model_beta_gam,
-    predictor = pred,
-    model_label = "Detected richness",
-    ref_data = alpha.mod
+  pred_scaled_rich_list[[pred]]=predict_linear_gam_sitewise(
+    model=model_beta_gam,
+    predictor=pred,
+    model_label="Detected richness",
+    ref_data=alpha.mod
   )
   
-  pred_scaled_edna_list[[pred]] <- predict_linear_gam_sitewise(
-    model = model_beta_reads_gam,
-    predictor = pred,
-    model_label = "eDNA index",
-    ref_data = phylum_counts
+  pred_scaled_edna_list[[pred]]=predict_linear_gam_sitewise(
+    model=model_beta_reads_gam,
+    predictor=pred,
+    model_label="eDNA index",
+    ref_data=phylum_counts
   )
 }
 
 # Season predictions
-pred_season_rich_gam <- predict_categorical_gam_sitewise(
-  model = model_beta_gam,
-  predictor = "SEASON",
-  model_label = "Detected richness",
-  ref_data = alpha.mod
+pred_season_rich_gam=predict_categorical_gam_sitewise(
+  model=model_beta_gam,
+  predictor="SEASON",
+  model_label="Detected richness",
+  ref_data=alpha.mod
 )
 
-pred_season_edna_gam <- predict_categorical_gam_sitewise(
-  model = model_beta_reads_gam,
-  predictor = "SEASON",
-  model_label = "eDNA index",
-  ref_data = phylum_counts
+pred_season_edna_gam=predict_categorical_gam_sitewise(
+  model=model_beta_reads_gam,
+  predictor="SEASON",
+  model_label="eDNA index",
+  ref_data=phylum_counts
 )
 ```
 
@@ -2047,18 +2047,18 @@ pred_season_edna_gam <- predict_categorical_gam_sitewise(
 
 ```{r}
 # For Richness (site-specific)
-all_richness_fits_site <- c()
+all_richness_fits_site=c()
 
 # Collect all Richness predictions from all site-specific predictors
 for(pred in scaled_predictors) {
-  all_richness_fits_site <- c(all_richness_fits_site, 
+  all_richness_fits_site=c(all_richness_fits_site, 
                               pred_scaled_rich_list[[pred]]$fit,
                               pred_scaled_rich_list[[pred]]$lower,
                               pred_scaled_rich_list[[pred]]$upper)
 }
 
 # Add cyclic predictors
-all_richness_fits_site <- c(all_richness_fits_site,
+all_richness_fits_site=c(all_richness_fits_site,
                             pred_wdir_rich_gam$fit,
                             pred_wdir_rich_gam$lower,
                             pred_wdir_rich_gam$upper,
@@ -2070,29 +2070,29 @@ all_richness_fits_site <- c(all_richness_fits_site,
                             pred_lunar_rich_gam$upper)
 
 # Add season
-all_richness_fits_site <- c(all_richness_fits_site,
+all_richness_fits_site=c(all_richness_fits_site,
                             pred_season_rich_gam$fit,
                             pred_season_rich_gam$lower,
                             pred_season_rich_gam$upper)
 
 # Calculate global Richness range
-global_richness_range_site <- range(all_richness_fits_site, na.rm = TRUE)
-global_richness_padding_site <- diff(global_richness_range_site) * 0.15
-global_richness_ylim_site <- c(max(0, global_richness_range_site[1] - global_richness_padding_site), 
+global_richness_range_site=range(all_richness_fits_site, na.rm=TRUE)
+global_richness_padding_site=diff(global_richness_range_site) * 0.15
+global_richness_ylim_site=c(max(0, global_richness_range_site[1] - global_richness_padding_site), 
                                min(1, global_richness_range_site[2] + global_richness_padding_site))
 
 # For eDNA Index (site-specific)
-all_edna_fits_site <- c()
+all_edna_fits_site=c()
 
 for(pred in scaled_predictors) {
-  all_edna_fits_site <- c(all_edna_fits_site, 
+  all_edna_fits_site=c(all_edna_fits_site, 
                           pred_scaled_edna_list[[pred]]$fit,
                           pred_scaled_edna_list[[pred]]$lower,
                           pred_scaled_edna_list[[pred]]$upper)
 }
 
 # Add cyclic predictors
-all_edna_fits_site <- c(all_edna_fits_site,
+all_edna_fits_site=c(all_edna_fits_site,
                         pred_wdir_edna_gam$fit,
                         pred_wdir_edna_gam$lower,
                         pred_wdir_edna_gam$upper,
@@ -2104,15 +2104,15 @@ all_edna_fits_site <- c(all_edna_fits_site,
                         pred_lunar_edna_gam$upper)
 
 # Add season
-all_edna_fits_site <- c(all_edna_fits_site,
+all_edna_fits_site=c(all_edna_fits_site,
                         pred_season_edna_gam$fit,
                         pred_season_edna_gam$lower,
                         pred_season_edna_gam$upper)
 
 # Calculate global eDNA range
-global_edna_range_site <- range(all_edna_fits_site, na.rm = TRUE)
-global_edna_padding_site <- diff(global_edna_range_site) * 0.15
-global_edna_ylim_site <- c(max(0, global_edna_range_site[1] - global_edna_padding_site), 
+global_edna_range_site=range(all_edna_fits_site, na.rm=TRUE)
+global_edna_padding_site=diff(global_edna_range_site) * 0.15
+global_edna_ylim_site=c(max(0, global_edna_range_site[1] - global_edna_padding_site), 
                            min(1, global_edna_range_site[2] + global_edna_padding_site))
 
 cat("Global Richness range (site-specific):", round(global_richness_ylim_site, 4), "\n")
@@ -2121,270 +2121,270 @@ cat("Global eDNA Index range (site-specific):", round(global_edna_ylim_site, 4),
 
 
 # Function to create cyclic plots with site-specific colors and GLOBAL SCALES
-create_cyclic_site_plot <- function(pred_data, predictor_name, x_label, 
-                                    site_colors = cols.site,
-                                    global_ylim = global_richness_ylim_site) {
+create_cyclic_site_plot=function(pred_data, predictor_name, x_label, 
+                                    site_colors=cols.site,
+                                    global_ylim=global_richness_ylim_site) {
   
   # Ensure SITE_site column exists
   if(!"SITE_site" %in% names(pred_data)) {
-    pred_data$SITE_site <- pred_data$SITE
+    pred_data$SITE_site=pred_data$SITE
   }
   
-  plot <- ggplot() +
+  plot=ggplot() +
     # Confidence ribbons for each site (semi-transparent)
-    geom_ribbon(data = pred_data,
-                aes(x = direction_deg, ymin = lower, ymax = upper, 
-                    fill = SITE_site, group = SITE_site),
-                alpha = 0.15) +
+    geom_ribbon(data=pred_data,
+                aes(x=direction_deg, ymin=lower, ymax=upper, 
+                    fill=SITE_site, group=SITE_site),
+                alpha=0.15) +
     # Lines for each site
-    geom_line(data = pred_data,
-              aes(x = direction_deg, y = fit, color = SITE_site, group = SITE_site),
-              size = 1) +
-    scale_color_manual(values = site_colors, name = "Site") +
-    scale_fill_manual(values = site_colors, name = "Site") +
-    scale_y_continuous(name = "Predicted response", 
-                       limits = global_ylim,
-                       labels = scales::number_format(accuracy = 0.01)) +
-    labs(x = x_label, y = "Predicted response") +
+    geom_line(data=pred_data,
+              aes(x=direction_deg, y=fit, color=SITE_site, group=SITE_site),
+              size=1) +
+    scale_color_manual(values=site_colors, name="Site") +
+    scale_fill_manual(values=site_colors, name="Site") +
+    scale_y_continuous(name="Predicted response", 
+                       limits=global_ylim,
+                       labels=scales::number_format(accuracy=0.01)) +
+    labs(x=x_label, y="Predicted response") +
     My_Theme +
-    theme(legend.position = "right",
-          legend.key.size = unit(0.3, "cm"))
+    theme(legend.position="right",
+          legend.key.size=unit(0.3, "cm"))
   
   return(plot)
 }
 
 # Function to create scaled predictor plots with site-specific colors and GLOBAL SCALES
-create_scaled_site_plot <- function(pred_data, predictor_name, x_label,
-                                    site_colors = cols.site,
-                                    global_ylim = global_richness_ylim_site) {
+create_scaled_site_plot=function(pred_data, predictor_name, x_label,
+                                    site_colors=cols.site,
+                                    global_ylim=global_richness_ylim_site) {
   
   # Get the original scale column
-  orig_col <- paste0(predictor_name, "_orig")
+  orig_col=paste0(predictor_name, "_orig")
   
   # Ensure SITE_site column exists
   if(!"SITE_site" %in% names(pred_data)) {
-    pred_data$SITE_site <- pred_data$SITE
+    pred_data$SITE_site=pred_data$SITE
   }
   
-  plot <- ggplot() +
+  plot=ggplot() +
     # Confidence ribbons for each site
-    geom_ribbon(data = pred_data,
-                aes(x = .data[[orig_col]], ymin = lower, ymax = upper, 
-                    fill = SITE_site, group = SITE_site),
-                alpha = 0.15) +
+    geom_ribbon(data=pred_data,
+                aes(x=.data[[orig_col]], ymin=lower, ymax=upper, 
+                    fill=SITE_site, group=SITE_site),
+                alpha=0.15) +
     # Lines for each site
-    geom_line(data = pred_data,
-              aes(x = .data[[orig_col]], y = fit, color = SITE_site, group = SITE_site),
-              size = 1) +
-    scale_color_manual(values = site_colors, name = "Site") +
-    scale_fill_manual(values = site_colors, name = "Site") +
-    scale_y_continuous(name = "Predicted response", 
-                       limits = global_ylim,
-                       labels = scales::number_format(accuracy = 0.01)) +
-    labs(x = x_label, y = "Predicted response") +
+    geom_line(data=pred_data,
+              aes(x=.data[[orig_col]], y=fit, color=SITE_site, group=SITE_site),
+              size=1) +
+    scale_color_manual(values=site_colors, name="Site") +
+    scale_fill_manual(values=site_colors, name="Site") +
+    scale_y_continuous(name="Predicted response", 
+                       limits=global_ylim,
+                       labels=scales::number_format(accuracy=0.01)) +
+    labs(x=x_label, y="Predicted response") +
     My_Theme +
-    theme(legend.position = "right",
-          legend.key.size = unit(0.3, "cm"))
+    theme(legend.position="right",
+          legend.key.size=unit(0.3, "cm"))
   
   return(plot)
 }
 
 # Function for categorical predictor with GLOBAL SCALES
-create_season_site_plot <- function(pred_data, site_colors = cols.site.paired,
-                                    global_ylim = global_richness_ylim_site) {
+create_season_site_plot=function(pred_data, site_colors=cols.site.paired,
+                                    global_ylim=global_richness_ylim_site) {
   
-  plot <- ggplot(pred_data) +
-    geom_point(aes(x = SEASON_val, y = fit, color = SITE_site),
-               position = position_dodge(width = 0.5), size = 2) +
-    geom_errorbar(aes(x = SEASON_val, ymin = lower, ymax = upper, color = SITE_site),
-                  position = position_dodge(width = 0.5), width = 0.2) +
-    scale_color_manual(values = site_colors, name = "Site") +
-    scale_y_continuous(name = "Predicted response", 
-                       limits = global_ylim,
-                       labels = scales::number_format(accuracy = 0.01)) +
-    labs(x = "Season", y = "Predicted response") +
+  plot=ggplot(pred_data) +
+    geom_point(aes(x=SEASON_val, y=fit, color=SITE_site),
+               position=position_dodge(width=0.5), size=2) +
+    geom_errorbar(aes(x=SEASON_val, ymin=lower, ymax=upper, color=SITE_site),
+                  position=position_dodge(width=0.5), width=0.2) +
+    scale_color_manual(values=site_colors, name="Site") +
+    scale_y_continuous(name="Predicted response", 
+                       limits=global_ylim,
+                       labels=scales::number_format(accuracy=0.01)) +
+    labs(x="Season", y="Predicted response") +
     My_Theme +
-    theme(legend.position = "right",
-          legend.key.size = unit(0.3, "cm"))
+    theme(legend.position="right",
+          legend.key.size=unit(0.3, "cm"))
   
   return(plot)
 }
 
 
 # Cyclic plots - Richness (using global richness scale)
-cyclic_wdir_rich <- create_cyclic_site_plot(
+cyclic_wdir_rich=create_cyclic_site_plot(
   pred_wdir_rich_gam, "WDIR", "Wind direction (°)", 
   cols.site, global_richness_ylim_site)
 
-cyclic_mwd_rich <- create_cyclic_site_plot(
+cyclic_mwd_rich=create_cyclic_site_plot(
   pred_mwd_rich_gam, "MWD", "Wave direction (°)", 
   cols.site, global_richness_ylim_site)
 
-cyclic_lunar_rich <- create_cyclic_site_plot(
+cyclic_lunar_rich=create_cyclic_site_plot(
   pred_lunar_rich_gam, "lunar", "Lunar angle (°)", 
   cols.site, global_richness_ylim_site)
 
 # Cyclic plots - eDNA Index (using global eDNA scale)
-cyclic_wdir_edna <- create_cyclic_site_plot(
+cyclic_wdir_edna=create_cyclic_site_plot(
   pred_wdir_edna_gam, "WDIR", "Wind direction (°)", 
   cols.site, global_edna_ylim_site)
 
-cyclic_mwd_edna <- create_cyclic_site_plot(
+cyclic_mwd_edna=create_cyclic_site_plot(
   pred_mwd_edna_gam, "MWD", "Wave direction (°)", 
   cols.site, global_edna_ylim_site)
 
-cyclic_lunar_edna <- create_cyclic_site_plot(
+cyclic_lunar_edna=create_cyclic_site_plot(
   pred_lunar_edna_gam, "lunar", "Lunar angle (°)", 
   cols.site, global_edna_ylim_site)
 
 # Scaled predictor plots - Richness
-scaled_sst_rich <- create_scaled_site_plot(
+scaled_sst_rich=create_scaled_site_plot(
   pred_scaled_rich_list[["SST_scaled"]], "SST_scaled", "SST (°C)", 
   cols.site, global_richness_ylim_site)
 
-scaled_wind_rich <- create_scaled_site_plot(
+scaled_wind_rich=create_scaled_site_plot(
   pred_scaled_rich_list[["wind_scaled"]], "wind_scaled", "Wind speed (m/s)", 
   cols.site, global_richness_ylim_site)
 
-scaled_wave_rich <- create_scaled_site_plot(
+scaled_wave_rich=create_scaled_site_plot(
   pred_scaled_rich_list[["wave_scaled"]], "wave_scaled", "Wave height (m)", 
   cols.site, global_richness_ylim_site)
 
-scaled_tide_rich <- create_scaled_site_plot(
+scaled_tide_rich=create_scaled_site_plot(
   pred_scaled_rich_list[["tide_scaled"]], "tide_scaled", "Tide height (m)", 
   cols.site, global_richness_ylim_site)
 
 # Scaled predictor plots - eDNA Index
-scaled_sst_edna <- create_scaled_site_plot(
+scaled_sst_edna=create_scaled_site_plot(
   pred_scaled_edna_list[["SST_scaled"]], "SST_scaled", "SST (°C)", 
   cols.site, global_edna_ylim_site)
 
-scaled_wind_edna <- create_scaled_site_plot(
+scaled_wind_edna=create_scaled_site_plot(
   pred_scaled_edna_list[["wind_scaled"]], "wind_scaled", "Wind speed (m/s)", 
   cols.site, global_edna_ylim_site)
 
-scaled_wave_edna <- create_scaled_site_plot(
+scaled_wave_edna=create_scaled_site_plot(
   pred_scaled_edna_list[["wave_scaled"]], "wave_scaled", "Wave height (m)", 
   cols.site, global_edna_ylim_site)
 
-scaled_tide_edna <- create_scaled_site_plot(
+scaled_tide_edna=create_scaled_site_plot(
   pred_scaled_edna_list[["tide_scaled"]], "tide_scaled", "Tide height (m)", 
   cols.site, global_edna_ylim_site)
 
 # Season plots
-season_rich <- create_season_site_plot(
+season_rich=create_season_site_plot(
   pred_season_rich_gam, cols.site.paired, global_richness_ylim_site)
 
-season_edna <- create_season_site_plot(
+season_edna=create_season_site_plot(
   pred_season_edna_gam, cols.site.paired, global_edna_ylim_site)
 
 
-richness_plots_no_legend <- list(
-  scaled_wind_rich + theme(legend.position = "none"),
-  cyclic_wdir_rich + theme(legend.position = "none"),
-  scaled_wave_rich + theme(legend.position = "none"),
-  cyclic_mwd_rich + theme(legend.position = "none"),
-  scaled_tide_rich + theme(legend.position = "none"),
-  cyclic_lunar_rich + theme(legend.position = "none"),
-  scaled_sst_rich + theme(legend.position = "none"),
-  season_rich + theme(legend.position = "none")
+richness_plots_no_legend=list(
+  scaled_wind_rich + theme(legend.position="none"),
+  cyclic_wdir_rich + theme(legend.position="none"),
+  scaled_wave_rich + theme(legend.position="none"),
+  cyclic_mwd_rich + theme(legend.position="none"),
+  scaled_tide_rich + theme(legend.position="none"),
+  cyclic_lunar_rich + theme(legend.position="none"),
+  scaled_sst_rich + theme(legend.position="none"),
+  season_rich + theme(legend.position="none")
 )
 
-edna_plots_no_legend <- list(
-  scaled_wind_edna + theme(legend.position = "none"),
-  cyclic_wdir_edna + theme(legend.position = "none"),
-  scaled_wave_edna + theme(legend.position = "none"),
-  cyclic_mwd_edna + theme(legend.position = "none"),
-  scaled_tide_edna + theme(legend.position = "none"),
-  cyclic_lunar_edna + theme(legend.position = "none"),
-  scaled_sst_edna + theme(legend.position = "none"),
-  season_edna + theme(legend.position = "none")
+edna_plots_no_legend=list(
+  scaled_wind_edna + theme(legend.position="none"),
+  cyclic_wdir_edna + theme(legend.position="none"),
+  scaled_wave_edna + theme(legend.position="none"),
+  cyclic_mwd_edna + theme(legend.position="none"),
+  scaled_tide_edna + theme(legend.position="none"),
+  cyclic_lunar_edna + theme(legend.position="none"),
+  scaled_sst_edna + theme(legend.position="none"),
+  season_edna + theme(legend.position="none")
 )
 
 # Extract the legend from the first plot
-legend <- get_legend(scaled_wind_rich + theme(legend.position = "bottom"))
+legend=get_legend(scaled_wind_rich + theme(legend.position="bottom"))
 
 # Row 1: All Richness plots (8 columns)
-row_richness <- ggarrange(
-  plotlist = richness_plots_no_legend,
-  ncol = 8, nrow = 1,
-  labels = c("a", "b", "c", "d", "e", "f", "g", "h"),
-  font.label = list(size = 12, face = "bold")
+row_richness=ggarrange(
+  plotlist=richness_plots_no_legend,
+  ncol=8, nrow=1,
+  labels=c("a", "b", "c", "d", "e", "f", "g", "h"),
+  font.label=list(size=12, face="bold")
 )
 
 # Row 2: All eDNA plots (8 columns)
-row_edna <- ggarrange(
-  plotlist = edna_plots_no_legend,
-  ncol = 8, nrow = 1,
-  labels = c("i", "j", "k", "l", "m", "n", "o", "p"),
-  font.label = list(size = 12, face = "bold")
+row_edna=ggarrange(
+  plotlist=edna_plots_no_legend,
+  ncol=8, nrow=1,
+  labels=c("i", "j", "k", "l", "m", "n", "o", "p"),
+  font.label=list(size=12, face="bold")
 )
 
 # Combine rows with a shared legend
-figure_site_specific_global <- ggarrange(
+figure_site_specific_global=ggarrange(
   row_richness, row_edna,
-  ncol = 1, nrow = 2,
-  common.legend = TRUE,
-  legend = "bottom",
-  legend.grob = legend,
-  heights = c(1, 1)
+  ncol=1, nrow=2,
+  common.legend=TRUE,
+  legend="bottom",
+  legend.grob=legend,
+  heights=c(1, 1)
 )
 
 # Add labels for response types on the left
-GAM_site <- annotate_figure(
+GAM_site=annotate_figure(
   figure_site_specific_global,
-  left = text_grob("Richness", rot = 90, size = 14, face = "bold", 
-                   color = "#1985a1", vjust = 0.5, y = 0.75),
-  bottom = text_grob("eDNA Index", size = 14, face = "bold", 
-                     color = "black", vjust = 0.5)
+  left=text_grob("Richness", rot=90, size=14, face="bold", 
+                   color="#1985a1", vjust=0.5, y=0.75),
+  bottom=text_grob("eDNA Index", size=14, face="bold", 
+                     color="black", vjust=0.5)
 )
 
 print(GAM_site)
 
-ggsave(filename = file.path(paths$results_figs, "FIGURE_4_GAM_site.pdf"), plot=GAM_site, width=22, height=8, units="in", device=cairo_pdf, family="Arial")
+ggsave(filename=file.path(paths$results_figs, "FIGURE_4_GAM_site.pdf"), plot=GAM_site, width=22, height=8, units="in", device=cairo_pdf, family="Arial")
 ```
 
 
 ### v. Observed frequency histograms
 
 ```{r}
-create_frequency_histogram <- function(data, predictor, x_label, 
-                                       title_label, color_fill = "tan",
-                                       bins = 30, y_max = 1) {
+create_frequency_histogram=function(data, predictor, x_label, 
+                                       title_label, color_fill="tan",
+                                       bins=30, y_max=1) {
   
   # Extract the variable
-  var_data <- data[[predictor]]
+  var_data=data[[predictor]]
   
   # Remove NAs
-  var_data <- var_data[!is.na(var_data)]
+  var_data=var_data[!is.na(var_data)]
   
   # Create data frame for plotting
-  plot_data <- data.frame(value = var_data)
+  plot_data=data.frame(value=var_data)
   
-  # Create histogram with scaled frequency (max = 1)
-  p <- ggplot(plot_data, aes(x = value)) +
+  # Create histogram with scaled frequency (max=1)
+  p=ggplot(plot_data, aes(x=value)) +
     geom_histogram(
-      aes(y = after_stat(count / max(count))),
-      bins = bins,
-      fill = color_fill,
-      alpha = 0.3,
-      color = NA,
-      size = 0.3
+      aes(y=after_stat(count / max(count))),
+      bins=bins,
+      fill=color_fill,
+      alpha=0.3,
+      color=NA,
+      size=0.3
     ) +
     scale_y_continuous(
-      name = "Relative frequency",
-      limits = c(0, y_max),
-      breaks = seq(0, y_max, by = 0.25)
+      name="Relative frequency",
+      limits=c(0, y_max),
+      breaks=seq(0, y_max, by=0.25)
     ) +
     scale_x_continuous(
-      name = x_label
+      name=x_label
     ) +
-    labs(title = title_label) +
+    labs(title=title_label) +
     My_Theme +
     theme(
-      plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
-      axis.title = element_text(size = 10),
-      axis.text = element_text(size = 8)
+      plot.title=element_text(size=12, face="bold", hjust=0.5),
+      axis.title=element_text(size=10),
+      axis.text=element_text(size=8)
     )
   
   return(p)
@@ -2392,116 +2392,116 @@ create_frequency_histogram <- function(data, predictor, x_label,
 
 
 # 1. Wind Speed (WSPD)
-hist_wind <- create_frequency_histogram(
-  data = alpha.mod,
-  predictor = "WSPD",
-  x_label = "Wind speed (m/s)",
-  title_label = "A",
-  color_fill = "tan"
+hist_wind=create_frequency_histogram(
+  data=alpha.mod,
+  predictor="WSPD",
+  x_label="Wind speed (m/s)",
+  title_label="A",
+  color_fill="tan"
 )
 
 # 2. Wind Direction (WDIR)
-hist_wdir <- create_frequency_histogram(
-  data = alpha.mod,
-  predictor = "WDIR",
-  x_label = "Wind direction (°)",
-  title_label = "B",
-  color_fill = "tan"
+hist_wdir=create_frequency_histogram(
+  data=alpha.mod,
+  predictor="WDIR",
+  x_label="Wind direction (°)",
+  title_label="B",
+  color_fill="tan"
 )
 
 # 3. Wave Height (WVHT)
-hist_wave <- create_frequency_histogram(
-  data = alpha.mod,
-  predictor = "WVHT",
-  x_label = "Wave height (m)",
-  title_label = "C",
-  color_fill = "tan"
+hist_wave=create_frequency_histogram(
+  data=alpha.mod,
+  predictor="WVHT",
+  x_label="Wave height (m)",
+  title_label="C",
+  color_fill="tan"
 )
 
 # 4. Wave Direction (MWD)
-hist_mwd <- create_frequency_histogram(
-  data = alpha.mod,
-  predictor = "MWD",
-  x_label = "Wave direction (°)",
-  title_label = "D",
-  color_fill = "tan"
+hist_mwd=create_frequency_histogram(
+  data=alpha.mod,
+  predictor="MWD",
+  x_label="Wave direction (°)",
+  title_label="D",
+  color_fill="tan"
 )
 
 # 5. Tide Height
-hist_tide <- create_frequency_histogram(
-  data = alpha.mod,
-  predictor = "tide_height_m",
-  x_label = "Tide height (m)",
-  title_label = "E",
-  color_fill = "tan"
+hist_tide=create_frequency_histogram(
+  data=alpha.mod,
+  predictor="tide_height_m",
+  x_label="Tide height (m)",
+  title_label="E",
+  color_fill="tan"
 )
 
 # 6. Lunar Angle (degrees)
-hist_lunar <- create_frequency_histogram(
-  data = alpha.mod,
-  predictor = "degrees",
-  x_label = "Lunar angle (°)",
-  title_label = "F",
-  color_fill = "tan"
+hist_lunar=create_frequency_histogram(
+  data=alpha.mod,
+  predictor="degrees",
+  x_label="Lunar angle (°)",
+  title_label="F",
+  color_fill="tan"
 )
 
 # 7. Sea Surface Temperature (SST)
-hist_sst <- create_frequency_histogram(
-  data = alpha.mod,
-  predictor = "SST",
-  x_label = "SST (°C)",
-  title_label = "G",
-  color_fill = "tan"
+hist_sst=create_frequency_histogram(
+  data=alpha.mod,
+  predictor="SST",
+  x_label="SST (°C)",
+  title_label="G",
+  color_fill="tan"
 )
 
 # 8. Season (categorical - special handling)
-season_data <- data.frame(
-  SEASON = alpha.mod$SEASON
+season_data=data.frame(
+  SEASON=alpha.mod$SEASON
 )
 
-season_counts <- season_data %>%
+season_counts=season_data %>%
   group_by(SEASON) %>%
-  summarise(count = n()) %>%
-  mutate(rel_freq = count / max(count))
+  summarise(count=n()) %>%
+  mutate(rel_freq=count / max(count))
 
-hist_season <- ggplot(season_counts, aes(x = SEASON, y = rel_freq)) +
-  geom_bar(stat = "identity", fill = "tan", alpha = 0.3, color = NA, size = 0.3) +
+hist_season=ggplot(season_counts, aes(x=SEASON, y=rel_freq)) +
+  geom_bar(stat="identity", fill="tan", alpha=0.3, color=NA, size=0.3) +
   scale_y_continuous(
-    name = "Relative frequency",
-    limits = c(0, 1),
-    breaks = seq(0, 1, by = 0.25)
+    name="Relative frequency",
+    limits=c(0, 1),
+    breaks=seq(0, 1, by=0.25)
   ) +
   scale_x_discrete(
-    name = "Season"
+    name="Season"
   ) +
-  labs(title = "H") +
+  labs(title="H") +
   My_Theme +
   theme(
-    plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
-    axis.title = element_text(size = 10),
-    axis.text = element_text(size = 8)
+    plot.title=element_text(size=12, face="bold", hjust=0.5),
+    axis.title=element_text(size=10),
+    axis.text=element_text(size=8)
   )
 
-figure_histograms <- ggarrange(
+figure_histograms=ggarrange(
   hist_wind, hist_wdir,
   hist_wave, hist_mwd,
   hist_tide, hist_lunar,
   hist_sst, hist_season,
-  ncol = 4, nrow = 2,
-  labels = NULL  # Labels are already in the plots
+  ncol=4, nrow=2,
+  labels=NULL  # Labels are already in the plots
 )
 
 # Add overall title
-figure_histograms <- annotate_figure(
+figure_histograms=annotate_figure(
   figure_histograms,
-  top = text_grob("Observed Frequency Distributions of Environmental Predictors", 
-                  size = 16, face = "bold")
+  top=text_grob("Observed Frequency Distributions of Environmental Predictors", 
+                  size=16, face="bold")
 )
 
 # Print the figure
 print(figure_histograms)
 
-ggsave(filename = file.path(paths$results_figs, "FIGURE_4_histograms_only.pdf"), plot = figure_histograms, width = 12, height = 6, units = "in", device = cairo_pdf, family = "Arial")
+ggsave(filename=file.path(paths$results_figs, "FIGURE_4_histograms_only.pdf"), plot=figure_histograms, width=12, height=6, units="in", device=cairo_pdf, family="Arial")
 ```
 
 ##F. Figure 6
@@ -2509,47 +2509,47 @@ ggsave(filename = file.path(paths$results_figs, "FIGURE_4_histograms_only.pdf"),
 ### i. Prepare eDNA index timeseries data
 
 ```{r}
-data.long.top5 = subset(data.long.top5, YEAR != "2023")
-data.long.top5 = subset(data.long.top5, STEP != "1")
-data.long.top5$DATE = as.Date(data.long.top5$DATE, format = "%d/%m/%Y")
+data.long.top5=subset(data.long.top5, YEAR != "2023")
+data.long.top5=subset(data.long.top5, STEP != "1")
+data.long.top5$DATE=as.Date(data.long.top5$DATE, format="%d/%m/%Y")
 
-Modelplot.step.prop = data.long.top5 %>%
+Modelplot.step.prop=data.long.top5 %>%
   group_by(STEP, DATE, SITE, MARKER, phylum) %>%
   summarise(
-    index = sum(abundance, na.rm = TRUE),
-    sd = sd(abundance, na.rm = TRUE),
-    se = sd / sqrt(n()),
-    .groups = "drop"
+    index=sum(value, na.rm=TRUE),
+    sd=sd(value, na.rm=TRUE),
+    se=sd / sqrt(n()),
+    .groups="drop"
   ) %>%
   group_by(SITE, MARKER, STEP) %>%
-  mutate(total_value = sum(index, na.rm = TRUE)) %>%
+  mutate(total_value=sum(index, na.rm=TRUE)) %>%
   ungroup() %>%
   mutate(
-    prop = index / total_value,
-    DATE = as.Date(DATE, format = "%d/%m/%Y")
+    prop=index / total_value,
+    DATE=as.Date(DATE, format="%d/%m/%Y")
   ) %>%
   arrange(SITE, phylum, STEP, MARKER)
 
-Modelplot.step.index = data.long.top5 %>%
+Modelplot.step.index=data.long.top5 %>%
   group_by(SITE, phylum, STEP, DATE, MARKER) %>%
   summarise(
-    index = sum(abundance, na.rm = TRUE),
-    .groups = "drop"
+    index=sum(value, na.rm=TRUE),
+    .groups="drop"
   ) %>%
   mutate(
-    STEP = as.numeric(STEP),
-    DATE = as.Date(DATE, format = "%d/%m/%Y")
+    STEP=as.numeric(STEP),
+    DATE=as.Date(DATE, format="%d/%m/%Y")
   )
 
-final_index = Modelplot.step.index %>%
+final_index=Modelplot.step.index %>%
   select(SITE, phylum, STEP, MARKER, index) %>%
   pivot_wider(
-    names_from = MARKER,
-    values_from = index
+    names_from=MARKER,
+    values_from=index
   ) %>%
   filter(!is.na(`18S`), !is.na(COI)) %>%
   arrange(SITE, phylum, STEP) %>%
-  distinct(SITE, phylum, STEP, .keep_all = TRUE)
+  distinct(SITE, phylum, STEP, .keep_all=TRUE)
 
 ```
 
@@ -2559,102 +2559,102 @@ final_index = Modelplot.step.index %>%
 # Compute Kendall W for paired observations among SITE x Phylum x Marker combinations
 library(synchrony)
 set.seed(123)
-sync_results = final_index %>%
+sync_results=final_index %>%
   group_by(SITE, phylum) %>%
   summarise(
-    n_steps = n(),
-    ts = list(
+    n_steps=n(),
+    ts=list(
       as.matrix(pick(`18S`, COI)[order(STEP), ])
     ),
-    .groups = "drop"
+    .groups="drop"
   ) %>%
   filter(n_steps >= 6) %>%
   rowwise() %>%
   mutate(
-    sync_res = list(
+    sync_res=list(
       kendall.w(
-        data   = ts,
-        nrands = numperm,
-        type   = 1,   # or 2
-        quiet  = FALSE
+        data  =ts,
+        nrands=numperm,
+        type  =1,   # or 2
+        quiet =FALSE
       )
     ),
-    W       = sync_res$w.corrected,
-    rho     = sync_res$spearman.corr,
-    p_value = sync_res$pval.rand
+    W      =sync_res$w.corrected,
+    rho    =sync_res$spearman.corr,
+    p_value=sync_res$pval.rand
   ) %>%
   ungroup() %>%
   select(SITE, phylum, n_steps, W, rho, p_value)
 
 
-annot_data = sync_results %>%
+annot_data=sync_results %>%
   left_join(
     Modelplot.step.prop %>% distinct(SITE, phylum, DATE),
-    by = c("SITE", "phylum")
+    by=c("SITE", "phylum")
   ) %>%
   mutate(
-    sync_xpos = min(DATE) - 5,
-    r_xpos    = min(DATE) + 225,
-    p_xpos    = min(DATE) + 460,
-    sync_ypos = 0.95,
-    y_pos_r   = 0.95,
-    y_pos_p   = 0.95
+    sync_xpos=min(DATE) - 5,
+    r_xpos   =min(DATE) + 225,
+    p_xpos   =min(DATE) + 460,
+    sync_ypos=0.95,
+    y_pos_r  =0.95,
+    y_pos_p  =0.95
   ) %>%
-  distinct(SITE, phylum, .keep_all = TRUE)
+  distinct(SITE, phylum, .keep_all=TRUE)
 ```
 
 ### iii. Plot
 
 ```{r}
-fig6=ggplot(Modelplot.step.prop, aes(x = DATE, y = prop, group = interaction(SITE, MARKER), color = MARKER)) + 
-  geom_vline(xintercept = as.Date(c("2019-09-19", "2019-11-27", "2020-09-22", "2020-11-30")), 
-             linetype = "dashed", color = "grey70", size = 0.7, alpha = 0.6) +
+fig6=ggplot(Modelplot.step.prop, aes(x=DATE, y=prop, group=interaction(SITE, MARKER), color=MARKER)) + 
+  geom_vline(xintercept=as.Date(c("2019-09-19", "2019-11-27", "2020-09-22", "2020-11-30")), 
+             linetype="dashed", color="grey70", size=0.7, alpha=0.6) +
   geom_line() +
-  geom_point(size = 1) +
-  geom_errorbar(aes(ymin = prop - se, ymax = prop + se), width = 0.2) +
+  geom_point(size=1) +
+  geom_errorbar(aes(ymin=prop - se, ymax=prop + se), width=0.2) +
   xlab("") +
   ylab("Relative eDNA Contribution") + 
-  #scale_y_sqrt(limits = c(0, 1)) +
+  #scale_y_sqrt(limits=c(0, 1)) +
   ylim(0,1)+
-  facet_grid(SITE ~ phylum, scales = "fixed") + 
-  scale_color_manual(values = cols.marker) + 
+  facet_grid(SITE ~ phylum, scales="fixed") + 
+  scale_color_manual(values=cols.marker) + 
   scale_x_date(
-  breaks = "4 months",
-  labels = scales::date_format("%m/%y"),
-  expand = c(.1, .1)
+  breaks="4 months",
+  labels=scales::date_format("%m/%y"),
+  expand=c(.1, .1)
 ) + 
   My_Theme +
   theme(
-    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 0.5),
-    axis.text.y = element_text(size = 10),
-    panel.spacing = unit(1, "lines"), 
-    legend.position = "right"
+    axis.text.x=element_text(angle=45, hjust=1, vjust=0.5),
+    axis.text.y=element_text(size=10),
+    panel.spacing=unit(1, "lines"), 
+    legend.position="right"
   ) +
   # Add Kendall's W annotation (top-left, slightly below max)
   geom_text(
     aes(
-      x = sync_xpos, y = sync_ypos,  
-      label = paste0("W= ", formatC(W, format = "f", digits = 2)),
-      fontface = ifelse(p_value < 0.05, "bold", "plain")  # Bold if p-value is significant
+      x=sync_xpos, y=sync_ypos,  
+      label=paste0("W= ", formatC(W, format="f", digits=2)),
+      fontface=ifelse(p_value < 0.05, "bold", "plain")  # Bold if p-value is significant
     ),
-    data = annot_data,
-    inherit.aes = FALSE,
-    size = 3.2,
-    hjust = 0  # Align left
+    data=annot_data,
+    inherit.aes=FALSE,
+    size=3.2,
+    hjust=0  # Align left
   ) +
-  geom_text(aes(x = r_xpos, y = y_pos_r,label = paste0("\u03C1= ", formatC(rho, format = "f", digits = 2)), fontface = ifelse(p_value < 0.05, "bold", "plain")),data = annot_data,inherit.aes = FALSE,size = 3.2, hjust = 0) +
+  geom_text(aes(x=r_xpos, y=y_pos_r,label=paste0("\u03C1= ", formatC(rho, format="f", digits=2)), fontface=ifelse(p_value < 0.05, "bold", "plain")),data=annot_data,inherit.aes=FALSE,size=3.2, hjust=0) +
   # Add p-value annotation
   geom_text(
     aes(
-      x = p_xpos, y = y_pos_p, 
-      label = ifelse(p_value < 0.01, "p < 0.01", paste0("p = ", formatC(p_value, format = "f", digits = 2))),
-      fontface = ifelse(p_value < 0.05, "bold", "plain")  # Bold if p-value is significant
+      x=p_xpos, y=y_pos_p, 
+      label=ifelse(p_value < 0.01, "p < 0.01", paste0("p=", formatC(p_value, format="f", digits=2))),
+      fontface=ifelse(p_value < 0.05, "bold", "plain")  # Bold if p-value is significant
     ),
-    data = annot_data,
-    inherit.aes = FALSE,
-    size = 3.2,
-    hjust = 0  # Align left
-  ) + theme(legend.position = "none")
+    data=annot_data,
+    inherit.aes=FALSE,
+    size=3.2,
+    hjust=0  # Align left
+  ) + theme(legend.position="none")
 fig6
 ```
 
@@ -2662,13 +2662,13 @@ fig6
 
 ```{r}
 ggsave(
-  filename = file.path(paths$results_figs, "FIGURE_6.pdf"),
-  plot     = fig6,
-  width    = 11,
-  height   = 6,
-  units    = "in",
-  device   = cairo_pdf,
-  family   = "Arial"
+  filename=file.path(paths$results_figs, "FIGURE_6.pdf"),
+  plot    =fig6,
+  width   =11,
+  height  =6,
+  units   ="in",
+  device  =cairo_pdf,
+  family  ="Arial"
 )
 ```
 
@@ -2678,33 +2678,42 @@ ggsave(
 ###i. Richness
 
 ```{r}
-rf_perm_prop <- rfPermute(formula = prop ~ SST_scaled + wave_scaled + tide_scaled + wind_scaled + MWD + WDIR + degrees + SEASON + MARKER+ SITE, data = alpha.mod.clean, ntree = 250, num.rep = 9999)
+alpha.mod.clean=alpha.mod %>%
+  drop_na(wave_scaled, MWD) #removing missing wave data observations
+
+#### RF Model ###################################################
+rf_perm_prop=rfPermute(formula=prop ~ SST_scaled + wave_scaled + tide_scaled + wind_scaled + MWD + WDIR + degrees + SEASON + MARKER+ SITE, data=alpha.mod.clean, ntree=250, num.rep=numperm, num.cores=cores_to_use)
+saveRDS(rf_perm_prop, file.path(paths$results_rds,"RFmodel_richness.rds"))
+##############################################################
 ```
 
 
 ###ii. Reads
 
 ```{r}
-rf_perm_reads <- rfPermute(formula = reads ~ SST_scaled + wave_scaled + tide_scaled + wind_scaled + MWD + WDIR + degrees + SEASON + phylum + MARKER+ SITE, data = phylum_counts_clean, ntree = 100, num.rep = 999, num.cores=14)
+#### RF Model ################################
+rf_perm_reads=rfPermute(formula=reads ~ SST_scaled + wave_scaled + tide_scaled + wind_scaled + MWD + WDIR + degrees + SEASON + phylum + MARKER+ SITE, data=phylum_counts_clean, ntree=100, num.rep=numperm, num.cores=cores_to_use)
+saveRDS(rf_perm_reads, file.path(paths$results_rds,"RFmodel_reads.rds"))
+############################################
 ```
 
 
 ### iii. Dominant Phyla
 
 ```{r}
-phylum_counts_pa = phylum_counts_clean %>%
-  mutate(present = ifelse(abundance > 0, "Present", "Absent"))
+phylum_counts_pa=phylum_counts_clean %>%
+  mutate(present=ifelse(abundance > 0, "Present", "Absent"))
 
 ## Dominant Phyla
-dominant_phylum = phylum_counts_pa %>%
+dominant_phylum=phylum_counts_pa %>%
   group_by(SAMPLE) %>%
-  slice_max(abundance, n = 1) %>%
+  slice_max(abundance, n=1) %>%
   ungroup()
 
-####set.seed(42) ####################################################################################
-#rf_perm_phyla = rfPermute(as.factor(phylum) ~ SST_scaled + wave_scaled + tide_scaled + wind_scaled + MWD_sin + MWD_cos + WDIR_sin + WDIR_cos + lunar_sin + lunar_cos + SEASON + MARKER+ SITE, data = dominant_phylum, ntree = 500, importance = TRUE, sampsize = rep(min(table(dominant_phylum$phylum)), length(unique(dominant_phylum$phylum))), num.rep = numperm, num.cores=cores_to_use)
-#saveRDS(rf_perm_phyla, file.path(paths$results_rds,"RFmodel_phyla.rds"))
-##################################################################################################
+####RF Model ###############################################
+rf_perm_phyla=rfPermute(as.factor(phylum) ~ SST_scaled + wave_scaled + tide_scaled + wind_scaled + MWD_sin + MWD_cos + WDIR_sin + WDIR_cos + lunar_sin + lunar_cos + SEASON + MARKER+ SITE, data=dominant_phylum, ntree=500, importance=TRUE, sampsize=rep(min(table(dominant_phylum$phylum)), length(unique(dominant_phylum$phylum))), num.rep=numperm, num.cores=cores_to_use)
+saveRDS(rf_perm_phyla, file.path(paths$results_rds,"RFmodel_phyla.rds"))
+##############################################################
 rf_perm_phyla=readRDS(file.path(paths$results_rds,"RFmodel_phyla.rds"))
 
 rf_perm_phyla
@@ -2714,5 +2723,5 @@ oob.error=as.data.frame(rf_perm_phyla$rf$confusion)
 oob.error$accuracy=1-oob.error$class.error
 oob.error$mean_err=mean(rf_perm_phyla$rf$confusion[,6])#OOB Accuracy
 oob.error$mean_accur=1-mean(rf_perm_phyla$rf$confusion[,6]) #OOB Accuracy
-write.csv(oob.error, file.path(paths$results_tables, "TABLE_RFclassification_error.csv"), row.names = FALSE)
+write.csv(oob.error, file.path(paths$results_tables, "TABLE_RFclassification_error.csv"), row.names=FALSE)
 ```
