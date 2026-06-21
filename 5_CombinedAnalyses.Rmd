@@ -2691,8 +2691,11 @@ saveRDS(rf_perm_prop, file.path(paths$results_rds,"RFmodel_richness.rds"))
 ###ii. Reads
 
 ```{r}
+phylum_counts_clean=phylum_counts %>%
+  drop_na(wave_scaled, MWD)
+
 #### RF Model ################################
-rf_perm_reads=rfPermute(formula=reads ~ SST_scaled + wave_scaled + tide_scaled + wind_scaled + MWD + WDIR + degrees + SEASON + phylum + MARKER+ SITE, data=phylum_counts_clean, ntree=100, num.rep=numperm, num.cores=cores_to_use)
+rf_perm_reads=rfPermute(formula=value ~ SST_scaled + wave_scaled + tide_scaled + wind_scaled + MWD + WDIR + degrees + SEASON + phylum + MARKER+ SITE, data=phylum_counts_clean, ntree=100, num.rep=numperm, num.cores=cores_to_use)
 saveRDS(rf_perm_reads, file.path(paths$results_rds,"RFmodel_reads.rds"))
 ############################################
 ```
