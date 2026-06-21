@@ -293,7 +293,7 @@ coverage_std=estimateD(
   base="coverage",  #Standardize by coverage
  level=target_coverage, conf=0.95)
 
-hill_df=coverage_std %>%
+hill_df_cov=coverage_std %>%
   dplyr::select(Assemblage, Order.q, qD) %>%
   tidyr::pivot_wider(
     names_from=Order.q,
@@ -301,20 +301,38 @@ hill_df=coverage_std %>%
     names_prefix="Hill_q"
   ) %>%
   dplyr::rename(SAMPLE_ID=Assemblage) %>%
-  dplyr::rename(Richness=Hill_q0) %>%
-  dplyr::rename(Shannon=Hill_q1) %>%
-  dplyr::rename(Simpson=Hill_q2)
+  dplyr::rename(Richness_cov=Hill_q0) %>%
+  dplyr::rename(Shannon_cov=Hill_q1) %>%
+  dplyr::rename(Simpson_cov=Hill_q2)
 #############################################################
 
-#hill_df=inext_out$AsyEst %>%
-# dplyr::select(Assemblage, Diversity, Estimator) %>%
-# tidyr::pivot_wider(
-#   names_from=Diversity,
-#   values_from=Estimator) %>%
-# dplyr::rename(SAMPLE_ID=Assemblage) %>%
-# dplyr::rename(Richness=`Species richness`) %>%
-# dplyr::rename(Shannon=`Shannon diversity`) %>%
-# dplyr::rename(Simpson=`Simpson diversity`)
+#### Extrapolated Richness #################################
+hill_df_ext=inext_out$AsyEst %>%
+ dplyr::select(Assemblage, Diversity, Estimator) %>%
+ tidyr::pivot_wider(
+   names_from=Diversity,
+   values_from=Estimator) %>%
+ dplyr::rename(SAMPLE_ID=Assemblage) %>%
+ dplyr::rename(Richness_ext=`Species richness`) %>%
+ dplyr::rename(Shannon_ext=`Shannon diversity`) %>%
+ dplyr::rename(Simpson_ext=`Simpson diversity`)
+###########################################################
+
+#### Observed Richness ####################################
+hill_df_obs=inext_out$AsyEst %>%
+ dplyr::select(Assemblage, Diversity, Observed) %>%
+ tidyr::pivot_wider(
+   names_from=Diversity,
+   values_from=Observed) %>%
+ dplyr::rename(SAMPLE_ID=Assemblage) %>%
+ dplyr::rename(Richness=`Species richness`) %>%
+ dplyr::rename(Shannon=`Shannon diversity`) %>%
+ dplyr::rename(Simpson=`Simpson diversity`)
+##########################################################
+
+hill_df <- hill_df_obs %>%
+  dplyr::full_join(hill_df_ext, by = "SAMPLE_ID") %>%
+  dplyr::full_join(hill_df_cov, by = "SAMPLE_ID")
 
 #Merge with metadata
 alpha_div=hill_df %>%
